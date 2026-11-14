@@ -145,41 +145,56 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sort svg { position: absolute; right: 10px; top: 50%; width: 12px; height: 12px; transform: translateY(-50%); pointer-events: none; color: var(--ink-2); }
 .result-count { font-size: 12px; color: var(--ink-3); letter-spacing: .02em; }
 
-/* ---------- Deal cards ---------- */
-.list { display: grid; gap: 10px; }
+/* ---------- Deal groups + cards ----------
+   Cards are split into two columns by relationship: left = the trip (where, how, when),
+   right = the money (price, discount, usual price). Deal quality is carried by the group heading. */
+.feed { display: grid; gap: 22px; }
+.group { display: grid; gap: 8px; }
+.group-head { display: grid; gap: 1px; padding: 0 2px 2px; }
+.group-title { margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-stretch: 85%; font-weight: 750; font-size: 18px; line-height: 1.2; }
+.group-title .count { font-family: var(--font-data); font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.group-note { font-size: 12.5px; color: var(--ink-3); }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--ink-3); }
+.dot.steal { background: var(--signal); }
+.dot.great { background: var(--drop); }
+.list { display: grid; gap: 8px; }
 .deal {
   position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
-  display: grid; grid-template-columns: 1fr auto; gap: 12px 12px; padding: 14px 14px 12px 16px;
+  padding: 12px 14px 14px 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px;
+  grid-template-areas: "route bell" "city price" "trip save";
 }
-.deal.is-steal { border-color: color-mix(in srgb, var(--signal) 55%, var(--line)); }
-.deal-open { all: unset; cursor: pointer; display: grid; grid-template-columns: 58px 1fr; gap: 12px; align-items: center; min-width: 0; }
-.deal-open::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
-.deal-open:focus-visible::after { outline: 2px solid var(--signal); outline-offset: 2px; }
+.group.steal .deal { border-color: color-mix(in srgb, var(--signal) 45%, var(--line)); }
 .deal:hover { box-shadow: var(--shadow); }
-.code { font-family: var(--font-data); font-weight: 600; font-size: 23px; letter-spacing: .03em; line-height: 1; }
-.dest { min-width: 0; display: grid; gap: 2px; }
-.dest strong { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meta { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.price { display: grid; justify-items: end; align-content: center; gap: 2px; }
-.price .now { font-family: var(--font-data); font-weight: 600; font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
-.price .was { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.price .was s { text-decoration-thickness: 1px; }
-.deal-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-.foot-chips { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px 6px; flex-wrap: wrap; }
+.route-line { grid-area: route; align-self: center; font-family: var(--font-data); font-size: 12px; letter-spacing: .06em; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-line .alt { color: var(--signal); font-weight: 600; }
+.city {
+  grid-area: city; all: unset; grid-area: city; cursor: pointer; min-width: 0; margin-top: 2px;
+  font-family: var(--font-display); font-stretch: 85%; font-weight: 750; font-size: 22px; line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.city::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-lg); }
+.city:focus-visible::after { outline: 2px solid var(--signal); outline-offset: 2px; }
+.trip { grid-area: trip; display: grid; gap: 2px; margin-top: 6px; font-size: 13px; color: var(--ink-2); min-width: 0; }
+.trip .warm { display: inline-flex; align-items: center; gap: 4px; color: var(--warm); font-weight: 500; }
+.trip svg { width: 14px; height: 14px; flex: none; }
+.now { grid-area: price; align-self: end; justify-self: end; font-family: var(--font-data); font-weight: 600; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.save { grid-area: save; justify-self: end; align-self: start; margin-top: 7px; display: grid; justify-items: end; gap: 2px; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.save .pct { font-family: var(--font-data); font-size: 13px; font-weight: 600; color: var(--drop); }
+.save .pct.steal { color: var(--signal); }
+.save .pct.good { color: var(--ink-2); }
+.bell {
+  grid-area: bell; justify-self: end; position: relative; z-index: 1; width: 32px; height: 32px; margin: -4px -6px 0 0;
+  display: grid; place-items: center; border: 0; background: transparent; border-radius: 50%; color: var(--ink-3);
+}
+.bell svg { width: 18px; height: 18px; }
+.bell:hover { background: var(--surface-2); color: var(--ink); }
+.bell[aria-pressed="true"] { background: var(--lake); color: var(--lake-ink); }
 .pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .pill.steal { background: var(--signal); color: var(--signal-ink); }
 .pill.great { background: var(--drop-bg); color: var(--drop); }
 .pill.good { border: 1px solid var(--line); color: var(--ink-2); padding: 2px 8px; }
-.fact-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); padding: 3px 4px; white-space: nowrap; }
-.fact-chip svg { width: 14px; height: 14px; }
-.fact-chip.warm { color: var(--warm); font-weight: 500; }
-.fact-chip.alt { color: var(--signal); font-weight: 600; }
-.bell {
-  position: relative; z-index: 1; margin-left: auto; width: 36px; height: 36px; display: grid; place-items: center;
-  border: 1px solid var(--line); background: var(--surface-2); border-radius: 50%; color: var(--ink-2);
-}
-.bell svg { width: 17px; height: 17px; }
-.bell[aria-pressed="true"] { background: var(--lake); color: var(--lake-ink); border-color: var(--lake); }
+.code { font-family: var(--font-data); font-weight: 600; font-size: 23px; letter-spacing: .03em; line-height: 1; }
 .empty { text-align: center; padding: 36px 20px; color: var(--ink-2); display: grid; gap: 12px; justify-items: center; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r-lg); }
 .empty p { margin: 0; max-width: 30ch; }
 
@@ -187,7 +202,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .page-head { padding-block: 22px 14px; }
 .page-title { font-family: var(--font-display); font-stretch: 85%; font-weight: 750; font-size: 24px; margin: 0 0 4px; }
 .page-sub { color: var(--ink-2); margin: 0; font-size: 14px; max-width: 46ch; }
-.section-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 22px 0 8px; }
+.section-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 22px 2px 8px; }
+.section-label:first-child { margin-top: 0; }
+.stack { display: grid; }
 
 /* Alerts */
 .watch { display: grid; grid-template-columns: 52px 1fr auto; gap: 6px 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 14px 14px 16px; }
@@ -262,35 +279,41 @@ dialog {
   border-radius: 24px 24px 0 0; background: var(--surface); color: var(--ink); overflow-y: auto;
 }
 dialog::backdrop { background: rgba(4, 14, 19, .55); }
-.sheet { padding-block: 10px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 16px; }
+.sheet { padding-block: 10px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 18px; }
 .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto; }
 .sheet-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
 .route { font-family: var(--font-data); font-size: 12.5px; color: var(--ink-2); letter-spacing: .06em; }
 .sheet h3 { margin: 4px 0 0; font-family: var(--font-display); font-stretch: 85%; font-weight: 800; font-size: 30px; line-height: 1.05; }
 .close { border: 0; background: var(--surface-2); border-radius: 50%; width: 36px; height: 36px; display: grid; place-items: center; flex: none; }
 .close svg { width: 16px; height: 16px; }
-.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.fact { background: var(--surface-2); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
-.fact span { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
-.fact b { font-family: var(--font-data); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.fact.save b { color: var(--drop); }
-.chart { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 12px 6px; }
+.price-hero { display: grid; gap: 6px; }
+.price-hero .row1 { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.price-hero .big { font-family: var(--font-data); font-weight: 600; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.price-hero .sub { font-size: 14px; color: var(--ink-2); }
+.price-hero .sub b { color: var(--drop); font-weight: 600; }
+.panel { border: 1px solid var(--line); border-radius: var(--r-md); }
+.chart { padding: 12px 12px 6px; }
 .chart-title { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 500; color: var(--ink-2); margin-bottom: 4px; gap: 8px; }
 .chart svg { width: 100%; height: auto; display: block; }
-.trip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: var(--r-md); overflow: hidden; }
-.trip div { background: var(--surface-2); padding: 10px 12px; font-size: 13px; color: var(--ink-2); }
-.trip b { display: block; color: var(--ink); font-weight: 600; font-size: 14px; }
-.sheet-actions { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; }
+.sheet-group { display: grid; gap: 8px; }
+.sheet-group .section-label { margin: 0 2px; }
+.trip-rows { margin: 0; }
+.trip-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; font-size: 14px; }
+.trip-rows div + div { border-top: 1px solid var(--line); }
+.trip-rows dt { color: var(--ink-2); }
+.trip-rows dd { margin: 0; font-weight: 600; text-align: right; }
+.trip-rows dd small { display: block; font-weight: 400; font-size: 12px; color: var(--ink-3); }
+.sheet-actions { position: sticky; bottom: 0; display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; padding-top: 8px; background: var(--surface); }
 .fine { font-size: 12px; color: var(--ink-3); margin: 0; text-align: center; }
 
 @media (max-width: 370px) {
   .pass-route .iata, .pass-price { font-size: 25px; }
-  .deal-open { grid-template-columns: 50px 1fr; }
-  .code { font-size: 20px; }
+  .city { font-size: 20px; }
+  .now { font-size: 23px; }
   .add-row { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .deal, .chip, .bell { transition: box-shadow .2s, background-color .2s, color .2s, border-color .2s; }
+  .deal, .chip, .bell, .switch span { transition: box-shadow .2s, background-color .2s, color .2s, border-color .2s; }
   .deal:active { transform: scale(.99); }
   .toast { transition: opacity .25s var(--ease), transform .25s var(--ease); }
   dialog[open] { animation: rise .32s var(--ease); }
@@ -334,9 +357,9 @@ dialog::backdrop { background: rgba(4, 14, 19, .55); }
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>
           </label>
         </div>
-        <div class="result-count" id="resultCount" aria-live="polite"></div>
+        <div class="sr" id="resultCount" aria-live="polite"></div>
       </div>
-      <div class="list gutter" id="dealList"></div>
+      <div class="feed gutter" id="dealList"></div>
     </section>
 
     <!-- ALERTS -->
@@ -345,7 +368,7 @@ dialog::backdrop { background: rgba(4, 14, 19, .55); }
         <h2 class="page-title">Fare alerts</h2>
         <p class="page-sub">Set a target price for a place you want to go. We'll flag it the moment a fare from your airports drops under it.</p>
       </div>
-      <div class="list" id="watchList"></div>
+      <div class="stack" id="watchList"></div>
       <p class="section-label">New alert</p>
       <form class="add-card" id="addWatch">
         <div class="add-row">
@@ -362,9 +385,9 @@ dialog::backdrop { background: rgba(4, 14, 19, .55); }
     <section id="view-airports" class="gutter" hidden>
       <div class="page-head">
         <h2 class="page-title">Home airports</h2>
-        <p class="page-sub">Hopkins is home base. Switch on the drive-to airports when a cheaper fare is worth the trip down I-77 or I-71.</p>
+        <p class="page-sub">Hopkins is home base. Switch on the drive-to airports when a cheaper fare is worth the trip down I‑77 or I‑71.</p>
       </div>
-      <div class="airports" id="airportList"></div>
+      <div class="stack" id="airportList"></div>
       <p class="section-label">Deal emails</p>
       <form class="add-card" id="emailForm">
         <label class="input-wrap" for="email">Email address
@@ -461,6 +484,11 @@ const $ = (s) => document.querySelector(s);
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
 const dropPct = (d) => Math.round((1 - d.price / d.typical) * 100);
 const tier = (p) => p >= 40 ? { label: "Steal", cls: "steal" } : p >= 25 ? { label: "Great", cls: "great" } : { label: "Good", cls: "good" };
+const TIERS = [
+  { cls: "steal", title: "Steals", note: "40% or more under the usual fare. These rarely last." },
+  { cls: "great", title: "Great deals", note: "25–39% under the usual fare." },
+  { cls: "good", title: "Good prices", note: "15–24% under the usual fare." },
+];
 const day = (iso) => new Date(iso + "T12:00:00");
 const fmt = (iso, o = { month: "short", day: "numeric" }) => day(iso).toLocaleDateString("en-US", o);
 const range = (d) => {
@@ -579,19 +607,18 @@ function renderChips() {
 
 function dealCard(d) {
   const p = dropPct(d), t = tier(p), on = watching(d.to);
-  return `<article class="deal${t.cls === "steal" ? " is-steal" : ""}">
-    <button class="deal-open" type="button" data-open="${d.id}" aria-label="${esc(d.city)}: ${money(d.price)} round trip, ${p}% under typical. Open details.">
-      <span class="code">${d.to}</span>
-      <span class="dest"><strong>${esc(d.city)}</strong><span class="meta">${range(d)} · ${nights(d)} nights</span></span>
-    </button>
-    <span class="price"><span class="now">${money(d.price)}</span><span class="was">usually <s>${money(d.typical)}</s></span></span>
-    <div class="deal-foot">
-      <span class="foot-chips"><span class="pill ${t.cls}">${t.label} · −${p}%</span>
-      <span class="fact-chip">${esc(d.airline)} · ${d.stops === 0 ? "nonstop" : "1 stop"}</span>
-      ${d.from !== "CLE" ? `<span class="fact-chip alt">${ICON.car}from ${d.from}</span>` : ""}
-      ${isEscape(d) ? `<span class="fact-chip warm" title="Typical high there vs. Cleveland that month">${ICON.sun}${d.high}° vs ${homeHigh(d)}°</span>` : ""}</span>
-      <button class="bell" type="button" data-bell="${d.to}" data-price="${d.price}" aria-pressed="${on}" aria-label="${on ? "Alert on" : "Set alert"} for ${esc(d.city)}">${ICON.bell}</button>
-    </div>
+  const from = d.from === "CLE" ? d.from : `<span class="alt">${d.from}</span>`;
+  return `<article class="deal">
+    <span class="route-line">${from} → ${d.to} · ${d.stops === 0 ? "NONSTOP" : "1 STOP"}</span>
+    <button class="bell" type="button" data-bell="${d.to}" data-price="${d.price}" aria-pressed="${on}" aria-label="${on ? "Alert on" : "Set alert"} for ${esc(d.city)}">${ICON.bell}</button>
+    <button class="city" type="button" data-open="${d.id}" aria-label="${esc(d.city)}: ${money(d.price)} round trip, ${p}% under typical. Open details.">${esc(d.city)}</button>
+    <span class="now">${money(d.price)}</span>
+    <span class="trip">
+      <span>${range(d)} · ${nights(d)} nights · ${esc(d.airline)}</span>
+      ${isEscape(d) ? `<span class="warm">${ICON.sun}${d.high}° there, ${homeHigh(d)}° at home</span>` : ""}
+      ${d.from !== "CLE" ? `<span>${ICON.car.replace("<svg", '<svg style="vertical-align:-2px;margin-right:4px"')}${AIRPORTS.find((a) => a.code === d.from).drive}</span>` : ""}
+    </span>
+    <span class="save"><span class="pct ${t.cls}">−${p}%</span><span>usually <s>${money(d.typical)}</s></span></span>
   </article>`;
 }
 
@@ -601,10 +628,42 @@ function renderDeals() {
   $("#budgetOut").textContent = state.budget >= 900 ? "Any" : money(state.budget);
   $("#sort").value = state.sort;
   const sortName = { drop: "biggest drop", price: "lowest fare", soon: "soonest departure" }[state.sort];
-  $("#resultCount").textContent = `${list.length} ${list.length === 1 ? "deal" : "deals"} · sorted by ${sortName}`;
-  $("#dealList").innerHTML = list.length ? list.map(dealCard).join("") : `
-    <div class="empty"><p>No fares match these filters. Raise your max price or add a drive-to airport.</p>
-    <a class="btn ghost" href="#airports">Add airports</a></div>`;
+  $("#resultCount").textContent = `${list.length} ${list.length === 1 ? "deal" : "deals"}, sorted by ${sortName}`;
+  if (!list.length) {
+    $("#dealList").innerHTML = `<div class="empty"><p>No fares match these filters. Raise your max price or add a drive-to airport.</p>
+      <a class="btn ghost" href="#airports">Add airports</a></div>`;
+    return;
+  }
+  const head = (title, n, note, cls) => `<header class="group-head">
+      <h3 class="group-title">${cls ? `<span class="dot ${cls}"></span>` : ""}${title}<span class="count">${n}</span></h3>
+      ${note ? `<span class="group-note">${note}</span>` : ""}</header>`;
+  // Biggest drop: group by deal quality. Other sorts: one list in that order.
+  if (state.sort === "drop") {
+    $("#dealList").innerHTML = TIERS.map((t) => {
+      const items = list.filter((d) => tier(dropPct(d)).cls === t.cls);
+      return items.length ? `<section class="group ${t.cls}">${head(t.title, items.length, t.note, t.cls)}<div class="list">${items.map(dealCard).join("")}</div></section>` : "";
+    }).join("");
+  } else {
+    const title = state.sort === "price" ? "Lowest fares first" : "Leaving soonest";
+    $("#dealList").innerHTML = `<section class="group">${head(title, list.length, "Color of the % shows how good the deal is.")}<div class="list">${list.map(dealCard).join("")}</div></section>`;
+  }
+}
+
+function watchCard(w, i) {
+  const best = bestFor(w.to), hit = best && best.price <= w.target;
+  const fill = best ? Math.min(100, Math.round((w.target / best.price) * 100)) : 0;
+  const text = !best ? "No fares from your airports yet"
+    : hit ? `<b>${money(best.price)} from ${best.from}</b>, ${money(w.target - best.price)} under your target`
+    : `Now ${money(best.price)}. Needs to drop ${money(best.price - w.target)} more.`;
+  return `<div class="watch">
+    <span class="code">${w.to}</span>
+    <span class="watch-name">${esc(cityOf(w.to))}<small>Under ${money(w.target)}${w.example ? " · example" : ""}</small></span>
+    <button class="remove" type="button" data-remove="${i}" aria-label="Remove ${esc(cityOf(w.to))} alert">Remove</button>
+    <div class="meter">
+      <div class="meter-track" aria-hidden="true"><div class="meter-fill${hit ? " hit" : ""}" style="width:${fill}%"></div></div>
+      <div class="meter-text">${text}</div>
+    </div>
+  </div>`;
 }
 
 function renderWatches() {
@@ -612,39 +671,32 @@ function renderWatches() {
   const cur = $("#watchDest").value;
   $("#watchDest").innerHTML = cities.map(([c, n]) => `<option value="${c}">${esc(n)} (${c})</option>`).join("");
   if (cur) $("#watchDest").value = cur;
-  let hits = 0;
-  $("#watchList").innerHTML = state.watches.length ? state.watches.map((w, i) => {
-    const best = bestFor(w.to), hit = best && best.price <= w.target;
-    if (hit) hits++;
-    const fill = best ? Math.min(100, Math.round((w.target / best.price) * 100)) : 0;
-    const text = !best ? "No fares from your airports yet"
-      : hit ? `<b>${money(best.price)} from ${best.from}</b>, ${money(w.target - best.price)} under your target`
-      : `Now ${money(best.price)}. Needs to drop ${money(best.price - w.target)} more.`;
-    return `<div class="watch">
-      <span class="code">${w.to}</span>
-      <span class="watch-name">${esc(cityOf(w.to))}<small>Under ${money(w.target)}${w.example ? " · example" : ""}</small></span>
-      <button class="remove" type="button" data-remove="${i}" aria-label="Remove ${esc(cityOf(w.to))} alert">Remove</button>
-      <div class="meter">
-        <div class="meter-track" aria-hidden="true"><div class="meter-fill${hit ? " hit" : ""}" style="width:${fill}%"></div></div>
-        <div class="meter-text">${text}</div>
-      </div>
-    </div>`;
-  }).join("") : `<div class="empty"><p>No alerts yet. Tap the bell on any deal, or create one below.</p></div>`;
-  $("#hitBadge").hidden = !hits;
-  $("#hitBadge").textContent = hits;
+  const rows = state.watches.map((w, i) => ({ w, i, hit: (bestFor(w.to)?.price ?? Infinity) <= w.target }));
+  const hits = rows.filter((r) => r.hit), waiting = rows.filter((r) => !r.hit);
+  const block = (label, dot, items) => items.length ? `<p class="section-label">${dot}${label} · ${items.length}</p>
+    <div class="list">${items.map((r) => watchCard(r.w, r.i)).join("")}</div>` : "";
+  $("#watchList").innerHTML = rows.length
+    ? block("Under your target", '<span class="dot great"></span>', hits) + block("Watching", "", waiting)
+    : `<div class="empty"><p>No alerts yet. Tap the bell on any deal, or create one below.</p></div>`;
+  $("#hitBadge").hidden = !hits.length;
+  $("#hitBadge").textContent = hits.length;
+}
+
+function airportRow(a) {
+  const n = DEALS.filter((d) => d.from === a.code).length;
+  return `<label class="airport" for="ap-${a.code}">
+    <span class="airport-info">
+      <span class="code">${a.code}</span>
+      <span><strong>${a.name}</strong><span class="drive">${a.drive} · ${n} ${n === 1 ? "deal" : "deals"}</span></span>
+    </span>
+    <span class="switch"><input type="checkbox" role="switch" id="ap-${a.code}" data-ap="${a.code}" ${state.origins.includes(a.code) ? "checked" : ""} ${a.locked ? "disabled" : ""}><span></span></span>
+  </label>`;
 }
 
 function renderAirports() {
-  $("#airportList").innerHTML = AIRPORTS.map((a) => {
-    const n = DEALS.filter((d) => d.from === a.code).length;
-    return `<label class="airport" for="ap-${a.code}">
-      <span class="airport-info">
-        <span class="code">${a.code}</span>
-        <span><strong>${a.name}</strong><span class="drive">${a.drive} · ${n} ${n === 1 ? "deal" : "deals"}</span></span>
-      </span>
-      <span class="switch"><input type="checkbox" role="switch" id="ap-${a.code}" data-ap="${a.code}" ${state.origins.includes(a.code) ? "checked" : ""} ${a.locked ? "disabled" : ""}><span></span></span>
-    </label>`;
-  }).join("");
+  const home = AIRPORTS.filter((a) => a.locked), drive = AIRPORTS.filter((a) => !a.locked);
+  $("#airportList").innerHTML = `<p class="section-label">Home base</p><div class="airports">${home.map(airportRow).join("")}</div>
+    <p class="section-label" style="margin-top:22px">Worth the drive</p><div class="airports">${drive.map(airportRow).join("")}</div>`;
   $("#email").value = state.email;
 }
 
@@ -656,32 +708,39 @@ function openDeal(id) {
   if (!d) return;
   const p = dropPct(d), t = tier(p), on = watching(d.to);
   const low = d.price < Math.min(...history(d).slice(0, 59));
+  const dateOpt = { weekday: "short", month: "short", day: "numeric" };
   $("#sheetBody").innerHTML = `
     <div class="grab"></div>
     <div class="sheet-head">
       <div><div class="route">${d.from} ⇄ ${d.to} · ROUND TRIP</div><h3 id="sheetTitle">${esc(d.city)}</h3></div>
       <button class="close" type="button" data-close aria-label="Close">${ICON.x}</button>
     </div>
-    <div class="facts">
-      <div class="fact"><span>Fare</span><b>${money(d.price)}</b></div>
-      <div class="fact"><span>Usually</span><b>${money(d.typical)}</b></div>
-      <div class="fact save"><span>You save</span><b>${money(d.typical - d.price)}</b></div>
+
+    <div class="sheet-group">
+      <div class="price-hero">
+        <div class="row1"><span class="big">${money(d.price)}</span><span class="pill ${t.cls}">${t.label} · −${p}%</span></div>
+        <div class="sub">Usually ${money(d.typical)} · <b>you save ${money(d.typical - d.price)}</b></div>
+      </div>
+      <div class="panel chart">
+        <div class="chart-title"><span>${low ? "Lowest fare in 60 days" : "Fare over the last 60 days"}</span></div>
+        ${chart(d)}
+      </div>
     </div>
-    <div class="chart">
-      <div class="chart-title"><span>${low ? "Lowest fare in 60 days" : "Fare history, 60 days"}</span><span class="pill ${t.cls}">${t.label} · −${p}%</span></div>
-      ${chart(d)}
+
+    <div class="sheet-group">
+      <p class="section-label">Your trip</p>
+      <dl class="panel trip-rows">
+        <div><dt>Dates</dt><dd>${fmt(d.out, dateOpt)} – ${fmt(d.back, dateOpt)}<small>${nights(d)} nights</small></dd></div>
+        <div><dt>Flight</dt><dd>${esc(d.airline)}<small>${d.stops ? "1 stop each way" : "Nonstop"} from ${d.from}</small></dd></div>
+        <div><dt>Weather</dt><dd>${d.high}° average high<small>${homeHigh(d)}° in Cleveland that month</small></dd></div>
+      </dl>
     </div>
-    <div class="trip">
-      <div>Depart<b>${fmt(d.out, { weekday: "short", month: "short", day: "numeric" })}</b></div>
-      <div>Return<b>${fmt(d.back, { weekday: "short", month: "short", day: "numeric" })}</b></div>
-      <div>Airline<b>${esc(d.airline)} · ${d.stops ? "1 stop" : "Nonstop"}</b></div>
-      <div>Weather<b>${d.high}° avg high</b>${homeHigh(d)}° at home</div>
-    </div>
+
     <div class="sheet-actions">
       <a class="btn signal" href="${flightsUrl(d)}" target="_blank" rel="noopener">Check fare ${ICON.ext}</a>
       <button class="btn ghost" type="button" data-bell="${d.to}" data-price="${d.price}" aria-pressed="${on}">${ICON.bell}${on ? "Alert on" : "Set alert"}</button>
     </div>
-    <p class="fine">Sample fare for the prototype. Prices change fast, so confirm on Google Flights.</p>`;
+    <p class="fine">Sample fare for the prototype. Confirm the price on Google Flights.</p>`;
   const dlg = $("#sheet");
   if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
 }
