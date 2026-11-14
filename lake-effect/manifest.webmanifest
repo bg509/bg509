@@ -1,0 +1,9 @@
+{
+  "name": "Lake Effect Fares",
+  "short_name": "Lake Effect",
+  "description": "Cheap flight deals from Cleveland and nearby airports.",
+  "start_url": "./index.html#deals",
+  "display": "standalone",
+  "background_color": "#eaf0f2",
+  "theme_color": "#0d3b4c"
+}

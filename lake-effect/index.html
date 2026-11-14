@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lake Effect Fares</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0d3b4c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one phone-width app column — header, filter rail, deal list, fixed tab bar. Departure-board type for codes and fares. */
+:root {
+  --bg: #eaf0f2;          /* lake-fog grey, leaning blue */
+  --surface: #ffffff;
+  --surface-2: #f4f7f8;
+  --ink: #0e1d25;
+  --ink-2: #4b5d66;
+  --line: #d3dde1;
+  --lake: #0d3b4c;        /* Lake Erie in November */
+  --lake-ink: #e9f3f6;
+  --signal: #e8742a;      /* runway approach light */
+  --drop: #13804f;        /* fare is below typical */
+  --drop-bg: #e0f2e8;
+  --spark-band: #dbe6ea;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 14px;
+  --tabbar-h: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a1419; --surface: #11212a; --surface-2: #0e1b22; --ink: #e6eef1; --ink-2: #93a7b0;
+    --line: #213641; --lake: #0f4a5f; --lake-ink: #e9f3f6; --signal: #f2894a; --drop: #4fd08f;
+    --drop-bg: #12352a; --spark-band: #1b3340; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a1419; --surface: #11212a; --surface-2: #0e1b22; --ink: #e6eef1; --ink-2: #93a7b0;
+  --line: #213641; --lake: #0f4a5f; --lake-ink: #e9f3f6; --signal: #f2894a; --drop: #4fd08f;
+  --drop-bg: #12352a; --spark-band: #1b3340; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.45 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--lake);
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.app { max-width: 560px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 24px); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Header */
+.top { background: var(--lake); color: var(--lake-ink); padding-block: 18px 22px; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wordmark { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 26px; letter-spacing: .01em; text-transform: uppercase; line-height: 1; margin: 0; }
+.wordmark span { color: var(--signal); }
+.origin-btn {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(233,243,246,.3);
+  background: transparent; color: var(--lake-ink); border-radius: 999px; padding: 6px 12px;
+  font-family: var(--font-data); font-size: 13px; letter-spacing: .04em;
+}
+.summary { margin-top: 18px; display: grid; gap: 4px; }
+.summary .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; opacity: .7; }
+.summary h2 { margin: 0; font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 24px; line-height: 1.15; text-wrap: balance; }
+.summary h2 b { color: var(--signal); font-weight: 800; }
+.sample-note { margin-top: 10px; font-size: 12px; opacity: .75; }
+
+/* Filters */
+.filters { display: grid; gap: 12px; padding-block: 16px 6px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 2px 4px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 7px 14px; font-size: 14px; font-weight: 500;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.budget { display: flex; align-items: center; gap: 10px; flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--ink-2); }
+.budget input { flex: 1; min-width: 0; accent-color: var(--lake); }
+.budget output { font-family: var(--font-data); color: var(--ink); min-width: 4.5ch; text-align: right; }
+select {
+  font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink);
+}
+
+/* Deal list */
+.list { display: grid; gap: 10px; padding-block: 10px; }
+.deal {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: center;
+  width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface);
+  border-radius: var(--radius); padding: 14px 14px 14px 16px;
+}
+.deal:hover { border-color: var(--ink-2); }
+.code { font-family: var(--font-data); font-weight: 600; font-size: 26px; letter-spacing: .04em; line-height: 1; grid-row: span 2; }
+.dest { min-width: 0; }
+.dest strong { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { font-size: 13px; color: var(--ink-2); }
+.price { text-align: right; grid-row: span 2; display: grid; justify-items: end; gap: 3px; }
+.price .now { font-family: var(--font-data); font-weight: 600; font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
+.price .was { font-size: 12px; color: var(--ink-2); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+.pill {
+  display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 2px 7px;
+  font-size: 12px; font-weight: 600; background: var(--drop-bg); color: var(--drop); white-space: nowrap;
+}
+.pill.steal { background: var(--signal); color: #1a0d03; }
+.tags { grid-column: 2 / 3; display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+.tag.alt { border-color: var(--signal); color: var(--signal); }
+.empty { text-align: center; padding: 40px 16px; color: var(--ink-2); }
+
+/* Section titles */
+.page-title { font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 22px; margin: 22px 0 4px; }
+.page-sub { color: var(--ink-2); margin: 0 0 14px; font-size: 14px; }
+
+/* Watchlist */
+.watch { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.watch .status { font-size: 13px; }
+.watch .hit { color: var(--drop); font-weight: 600; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.add-watch { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-top: 14px; }
+.add-watch input, .add-watch select, .field input {
+  font: inherit; font-size: 14px; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); min-width: 0; width: 100%;
+}
+.btn { border: 0; background: var(--lake); color: var(--lake-ink); border-radius: 10px; padding: 10px 16px; font-weight: 600; }
+.btn.signal { background: var(--signal); color: #1a0d03; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+/* Airports */
+.airports { display: grid; gap: 8px; }
+.airport { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; }
+.airport input { width: 20px; height: 20px; accent-color: var(--lake); }
+.airport .code { font-size: 20px; grid-row: auto; }
+.drive { font-family: var(--font-data); font-size: 12px; color: var(--ink-2); }
+.field { display: grid; gap: 6px; margin-top: 18px; font-size: 14px; }
+.toast { min-height: 1.4em; font-size: 13px; color: var(--drop); margin-top: 8px; }
+
+/* Tab bar */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface);
+  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+.tabbar nav { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); height: var(--tabbar-h); }
+.tabbar a { display: grid; place-items: center; align-content: center; gap: 2px; text-decoration: none; color: var(--ink-2); font-size: 12px; font-weight: 500; }
+.tabbar a svg { width: 22px; height: 22px; }
+.tabbar a[aria-current="page"] { color: var(--lake); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar a[aria-current="page"] { color: var(--signal); } }
+:root[data-theme="dark"] .tabbar a[aria-current="page"] { color: var(--signal); }
+.badge { font-family: var(--font-data); font-size: 10px; background: var(--signal); color: #1a0d03; border-radius: 999px; padding: 0 5px; margin-left: 3px; }
+
+/* Detail sheet */
+dialog {
+  border: 0; padding: 0; width: min(560px, 100%); max-width: 100%; max-height: 92vh; margin: auto auto 0;
+  border-radius: 20px 20px 0 0; background: var(--surface); color: var(--ink);
+}
+dialog::backdrop { background: rgba(6, 18, 24, .55); }
+.sheet { padding-block: 10px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 16px; }
+.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto; }
+.sheet-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.route { font-family: var(--font-data); font-size: 14px; color: var(--ink-2); letter-spacing: .04em; }
+.sheet h3 { margin: 2px 0 0; font-family: var(--font-display); font-stretch: 85%; font-weight: 800; font-size: 28px; line-height: 1.05; }
+.close { border: 0; background: var(--surface-2); border-radius: 999px; width: 34px; height: 34px; font-size: 18px; line-height: 1; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fact { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.fact span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.fact b { font-family: var(--font-data); font-size: 17px; font-variant-numeric: tabular-nums; }
+.chart { background: var(--surface-2); border-radius: 12px; padding: 12px 12px 8px; }
+.chart-title { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; gap: 8px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sheet-actions a.btn { text-align: center; text-decoration: none; }
+.fine { font-size: 12px; color: var(--ink-2); margin: 0; }
+
+@media (max-width: 380px) {
+  .code { font-size: 22px; }
+  .add-watch { grid-template-columns: 1fr 1fr; }
+  .add-watch .btn { grid-column: span 2; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .deal { transition: border-color .15s, transform .15s; }
+  .deal:active { transform: scale(.99); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top gutter">
+    <div class="brand">
+      <h1 class="wordmark">Lake <span>Effect</span></h1>
+      <button class="origin-btn" id="originBtn" type="button" aria-label="Change departure airports"></button>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <main>
+    <!-- DEALS -->
+    <section id="view-deals" class="gutter">
+      <div class="filters">
+        <div class="chips" role="group" aria-label="Trip type" id="chips"></div>
+        <div class="row">
+          <label class="budget" for="budget">Under
+            <input type="range" id="budget" min="100" max="900" step="25" value="900">
+            <output id="budgetOut">$900</output>
+          </label>
+          <label class="sr" for="sort">Sort deals</label>
+          <select id="sort">
+            <option value="drop">Biggest drop</option>
+            <option value="price">Lowest fare</option>
+            <option value="soon">Leaving soonest</option>
+          </select>
+        </div>
+      </div>
+      <div class="list" id="dealList"></div>
+    </section>
+
+    <!-- WATCHLIST -->
+    <section id="view-watchlist" class="gutter" hidden>
+      <h2 class="page-title">Fare alerts</h2>
+      <p class="page-sub">Pick a destination and a target price. You'll get a heads-up when a fare from your airports drops under it.</p>
+      <div class="list" id="watchList"></div>
+      <form class="add-watch" id="addWatch">
+        <label class="sr" for="watchDest">Destination</label>
+        <select id="watchDest"></select>
+        <label class="sr" for="watchTarget">Target price</label>
+        <input id="watchTarget" type="number" inputmode="numeric" min="30" max="3000" step="5" placeholder="Target $" required>
+        <button class="btn" type="submit">Add alert</button>
+      </form>
+    </section>
+
+    <!-- AIRPORTS -->
+    <section id="view-airports" class="gutter" hidden>
+      <h2 class="page-title">Home airports</h2>
+      <p class="page-sub">Hopkins is home base. Add the drive-to airports when a cheaper fare is worth the trip.</p>
+      <div class="airports" id="airportList"></div>
+      <form id="emailForm">
+        <div class="field">
+          <label for="email">Email for deal alerts</label>
+          <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" type="submit">Save</button>
+        </div>
+        <p class="toast" id="emailToast" role="status"></p>
+      </form>
+    </section>
+  </main>
+</div>
+
+<div class="tabbar">
+  <nav aria-label="Main">
+    <a href="#deals" data-view="deals">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 19h19"/><path d="M3.8 13.6 6 15l4-1.2-4.6-6 2-.6 7 4.7 4.8-1.4a1.8 1.8 0 0 1 1 3.4L7 17.6a2 2 0 0 1-1.9-.4L2.6 14.9z"/></svg>
+      Deals
+    </a>
+    <a href="#watchlist" data-view="watchlist">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
+      <span>Alerts<span class="badge" id="hitBadge" hidden></span></span>
+    </a>
+    <a href="#airports" data-view="airports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      Airports
+    </a>
+  </nav>
+</div>
+
+<dialog id="sheet" aria-labelledby="sheetTitle"><div class="sheet gutter" id="sheetBody"></div></dialog>
+
+<script>
+/* ---------- Sample data (replace with live fares from the API in v2) ---------- */
+const AIRPORTS = [
+  { code: "CLE", name: "Cleveland Hopkins", drive: "Home", locked: true },
+  { code: "CAK", name: "Akron-Canton", drive: "55 min" },
+  { code: "CMH", name: "Columbus John Glenn", drive: "2 hr 10 min" },
+  { code: "PIT", name: "Pittsburgh", drive: "2 hr 10 min" },
+  { code: "DTW", name: "Detroit Metro", drive: "2 hr 40 min" },
+];
+
+const TYPES = [
+  { id: "all", label: "All deals" },
+  { id: "warm", label: "Warm weather" },
+  { id: "city", label: "City breaks" },
+  { id: "intl", label: "International" },
+  { id: "nonstop", label: "Nonstop only" },
+];
+
+// price/typical are round-trip economy in USD. Dates are travel windows.
+const DEALS = [
+  { id: 1,  to: "MCO", city: "Orlando",       from: "CLE", price: 98,  typical: 236, out: "2027-01-21", back: "2027-01-26", airline: "Frontier",  stops: 0, types: ["warm"] },
+  { id: 2,  to: "CUN", city: "Cancún",        from: "CLE", price: 312, typical: 545, out: "2027-02-04", back: "2027-02-11", airline: "United",    stops: 0, types: ["warm","intl"] },
+  { id: 3,  to: "LAS", city: "Las Vegas",     from: "CLE", price: 148, typical: 298, out: "2026-12-04", back: "2026-12-07", airline: "Spirit",    stops: 0, types: ["city"] },
+  { id: 4,  to: "LAX", city: "Los Angeles",   from: "CLE", price: 219, typical: 389, out: "2027-01-14", back: "2027-01-20", airline: "American",  stops: 1, types: ["city","warm"] },
+  { id: 5,  to: "FLL", city: "Fort Lauderdale", from: "CLE", price: 134, typical: 258, out: "2027-02-12", back: "2027-02-17", airline: "Spirit", stops: 0, types: ["warm"] },
+  { id: 6,  to: "DUB", city: "Dublin",        from: "CLE", price: 498, typical: 892, out: "2027-03-02", back: "2027-03-10", airline: "Aer Lingus", stops: 1, types: ["intl","city"] },
+  { id: 7,  to: "BOS", city: "Boston",        from: "CLE", price: 128, typical: 214, out: "2026-12-11", back: "2026-12-14", airline: "JetBlue",   stops: 0, types: ["city"] },
+  { id: 8,  to: "DEN", city: "Denver",        from: "CLE", price: 176, typical: 284, out: "2027-01-08", back: "2027-01-12", airline: "Southwest", stops: 0, types: ["city"] },
+  { id: 9,  to: "SJU", city: "San Juan",      from: "PIT", price: 239, typical: 412, out: "2027-02-18", back: "2027-02-24", airline: "Spirit",    stops: 0, types: ["warm"] },
+  { id: 10, to: "TPA", city: "Tampa",         from: "CAK", price: 109, typical: 202, out: "2027-01-29", back: "2027-02-02", airline: "Breeze",    stops: 0, types: ["warm"] },
+  { id: 11, to: "LIS", city: "Lisbon",        from: "DTW", price: 541, typical: 868, out: "2027-03-16", back: "2027-03-24", airline: "Delta",     stops: 1, types: ["intl","city"] },
+  { id: 12, to: "PHX", city: "Phoenix",       from: "CLE", price: 207, typical: 318, out: "2027-02-25", back: "2027-03-02", airline: "Southwest", stops: 1, types: ["warm","city"] },
+  { id: 13, to: "NYC", city: "New York",      from: "CLE", price: 112, typical: 186, out: "2026-12-05", back: "2026-12-07", airline: "United",    stops: 0, types: ["city"] },
+  { id: 14, to: "PUJ", city: "Punta Cana",    from: "CLE", price: 389, typical: 586, out: "2027-03-06", back: "2027-03-13", airline: "Frontier",  stops: 0, types: ["warm","intl"] },
+  { id: 15, to: "SEA", city: "Seattle",       from: "CMH", price: 238, typical: 352, out: "2027-04-09", back: "2027-04-14", airline: "Alaska",    stops: 1, types: ["city"] },
+  { id: 16, to: "NAS", city: "Nassau",        from: "CLE", price: 347, typical: 498, out: "2027-02-20", back: "2027-02-25", airline: "American",  stops: 1, types: ["warm","intl"] },
+];
+
+/* ---------- Storage (per-device; wrapped so the app works without it) ---------- */
+const store = {
+  get(key, fallback) { try { const v = localStorage.getItem("lakeeffect:" + key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
+  set(key, value) { try { localStorage.setItem("lakeeffect:" + key, JSON.stringify(value)); } catch {} },
+};
+
+const state = {
+  type: store.get("type", "all"),
+  budget: store.get("budget", 900),
+  sort: store.get("sort", "drop"),
+  origins: store.get("origins", ["CLE", "CAK"]),
+  watches: store.get("watches", [
+    { to: "CUN", target: 350, example: true },
+    { to: "DUB", target: 450, example: true },
+    { to: "LAX", target: 250, example: true },
+  ]),
+  email: store.get("email", ""),
+};
+
+/* ---------- Helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const dropPct = (d) => Math.round((1 - d.price / d.typical) * 100);
+const tier = (pct) => pct >= 40 ? { label: "Steal", cls: "steal" } : pct >= 25 ? { label: "Great", cls: "" } : { label: "Good", cls: "" };
+const fmtDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const nights = (d) => Math.round((new Date(d.back) - new Date(d.out)) / 864e5);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function visibleDeals() {
+  return DEALS.filter((d) => state.origins.includes(d.from));
+}
+
+function filteredDeals() {
+  let list = visibleDeals().filter((d) => d.price <= state.budget);
+  if (state.type === "nonstop") list = list.filter((d) => d.stops === 0);
+  else if (state.type !== "all") list = list.filter((d) => d.types.includes(state.type));
+  const sorters = {
+    drop: (a, b) => dropPct(b) - dropPct(a),
+    price: (a, b) => a.price - b.price,
+    soon: (a, b) => a.out.localeCompare(b.out),
+  };
+  return list.sort(sorters[state.sort]);
+}
+
+// Deterministic 60-day price history that ends at today's fare.
+function history(d) {
+  let seed = d.id * 9301 + 49297;
+  const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const pts = [];
+  let p = d.typical * (0.95 + rand() * 0.1);
+  for (let i = 0; i < 60; i++) {
+    const pull = (d.typical - p) * 0.15;
+    p += pull + (rand() - 0.5) * d.typical * 0.08;
+    if (i > 52) p += (d.price - p) * 0.45; // the drop
+    pts.push(i === 59 ? d.price : Math.max(d.price * 1.02, p));
+  }
+  return pts;
+}
+
+function sparkline(d) {
+  const pts = history(d);
+  const W = 320, H = 110, padL = 34, padR = 8, padT = 8, padB = 18;
+  const max = Math.max(...pts, d.typical) * 1.05, min = Math.min(...pts) * 0.9;
+  const x = (i) => padL + (i / (pts.length - 1)) * (W - padL - padR);
+  const y = (v) => padT + (1 - (v - min) / (max - min)) * (H - padT - padB);
+  const line = pts.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+  const area = line + ` L${x(pts.length - 1)} ${H - padB} L${x(0)} ${H - padB} Z`;
+  const bandTop = y(d.typical * 1.08), bandBot = y(d.typical * 0.92);
+  const ex = x(pts.length - 1), ey = y(d.price);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fare over the last 60 days, ending at ${money(d.price)} against a typical ${money(d.typical)}">
+    <rect x="${padL}" y="${bandTop}" width="${W - padL - padR}" height="${bandBot - bandTop}" fill="var(--spark-band)"/>
+    <text x="${padL - 4}" y="${y(d.typical) + 4}" text-anchor="end" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--ink-2)">${money(d.typical)}</text>
+    <text x="${padL - 4}" y="${ey + 4}" text-anchor="end" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--drop)">${money(d.price)}</text>
+    <path d="${area}" fill="var(--drop)" opacity=".1"/>
+    <path d="${line}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="${ex}" cy="${ey}" r="4.5" fill="var(--drop)" stroke="var(--surface)" stroke-width="2"/>
+    <text x="${padL}" y="${H - 4}" font-size="10" fill="var(--ink-2)">60 days ago</text>
+    <text x="${W - padR}" y="${H - 4}" font-size="10" text-anchor="end" fill="var(--ink-2)">Today</text>
+  </svg>`;
+}
+
+function flightsUrl(d) {
+  const q = `Flights from ${d.from} to ${d.to} on ${d.out} through ${d.back}`;
+  return "https://www.google.com/travel/flights?q=" + encodeURIComponent(q);
+}
+
+function bestFor(code) {
+  return visibleDeals().filter((d) => d.to === code).sort((a, b) => a.price - b.price)[0];
+}
+
+/* ---------- Render ---------- */
+function renderHeader() {
+  $("#originBtn").textContent = state.origins.join(" · ") + " ▾";
+  const list = visibleDeals();
+  const big = list.filter((d) => dropPct(d) >= 25).length;
+  const best = list.slice().sort((a, b) => dropPct(b) - dropPct(a))[0];
+  $("#summary").innerHTML = `
+    <span class="eyebrow">This week from Northeast Ohio</span>
+    <h2><b>${big}</b> fares at least 25% under normal${best ? ` — best is ${esc(best.city)} for ${money(best.price)}` : ""}</h2>
+    <p class="sample-note">Sample fares for the prototype. Live prices plug in next.</p>`;
+}
+
+function renderChips() {
+  $("#chips").innerHTML = TYPES.map((t) =>
+    `<button class="chip" type="button" data-type="${t.id}" aria-pressed="${state.type === t.id}">${t.label}</button>`).join("");
+}
+
+function dealCard(d) {
+  const pct = dropPct(d), t = tier(pct);
+  return `<button class="deal" type="button" data-id="${d.id}" aria-label="${esc(d.city)}, ${money(d.price)} round trip, ${pct}% below typical">
+    <span class="code">${d.to}</span>
+    <span class="dest"><strong>${esc(d.city)}</strong><span class="meta">${fmtDate(d.out)} – ${fmtDate(d.back)} · ${esc(d.airline)}</span></span>
+    <span class="price"><span class="now">${money(d.price)}</span><span class="was">${money(d.typical)}</span><span class="pill ${t.cls}">${t.label} · −${pct}%</span></span>
+    <span class="tags">
+      ${d.from !== "CLE" ? `<span class="tag alt">from ${d.from}</span>` : ""}
+      <span class="tag">${d.stops === 0 ? "Nonstop" : d.stops + " stop"}</span>
+      <span class="tag">${nights(d)} nights</span>
+    </span>
+  </button>`;
+}
+
+function renderDeals() {
+  const list = filteredDeals();
+  $("#budget").value = state.budget;
+  $("#budgetOut").textContent = state.budget >= 900 ? "Any" : money(state.budget);
+  $("#sort").value = state.sort;
+  $("#dealList").innerHTML = list.length ? list.map(dealCard).join("")
+    : `<p class="empty">No deals match. Try raising your budget or adding a drive-to airport.</p>`;
+}
+
+function renderWatches() {
+  const cities = [...new Map(DEALS.map((d) => [d.to, d.city])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  $("#watchDest").innerHTML = cities.map(([code, city]) => `<option value="${code}">${esc(city)} (${code})</option>`).join("");
+  let hits = 0;
+  $("#watchList").innerHTML = state.watches.length ? state.watches.map((w, i) => {
+    const best = bestFor(w.to);
+    const city = cities.find((c) => c[0] === w.to)?.[1] ?? w.to;
+    const hit = best && best.price <= w.target;
+    if (hit) hits++;
+    const status = !best ? `No fares from your airports yet`
+      : hit ? `<span class="hit">${money(best.price)} from ${best.from} — under your target</span>`
+      : `Now ${money(best.price)} · ${money(best.price - w.target)} to go`;
+    return `<div class="watch">
+      <span class="code" style="font-size:22px;grid-row:auto">${w.to}</span>
+      <div style="min-width:0"><strong>${esc(city)}</strong> under ${money(w.target)}${w.example ? ` <span class="tag">example</span>` : ""}<div class="status">${status}</div></div>
+      <button class="icon-btn" type="button" data-remove="${i}" aria-label="Remove ${esc(city)} alert">Remove</button>
+    </div>`;
+  }).join("") : `<p class="empty">No alerts yet. Add one below.</p>`;
+  const badge = $("#hitBadge");
+  badge.hidden = !hits;
+  badge.textContent = hits;
+}
+
+function renderAirports() {
+  $("#airportList").innerHTML = AIRPORTS.map((a) => `
+    <label class="airport" for="ap-${a.code}">
+      <input type="checkbox" id="ap-${a.code}" data-ap="${a.code}" ${state.origins.includes(a.code) ? "checked" : ""} ${a.locked ? "disabled" : ""}>
+      <span><strong>${a.name}</strong><br><span class="drive">${a.locked ? "Home airport" : "Drive " + a.drive}</span></span>
+      <span class="code">${a.code}</span>
+    </label>`).join("");
+  $("#email").value = state.email;
+}
+
+function renderAll() { renderHeader(); renderChips(); renderDeals(); renderWatches(); renderAirports(); }
+
+/* ---------- Detail sheet ---------- */
+function openDeal(id) {
+  const d = DEALS.find((x) => x.id === id);
+  if (!d) return;
+  const pct = dropPct(d), t = tier(pct);
+  const low60 = Math.min(...history(d).slice(0, 59));
+  const watching = state.watches.some((w) => w.to === d.to);
+  $("#sheetBody").innerHTML = `
+    <div class="grab"></div>
+    <div class="sheet-head">
+      <div><div class="route">${d.from} ⇄ ${d.to} · ROUND TRIP</div><h3 id="sheetTitle">${esc(d.city)}</h3></div>
+      <button class="close" type="button" data-close aria-label="Close">×</button>
+    </div>
+    <div class="facts">
+      <div class="fact"><span>Fare</span><b>${money(d.price)}</b></div>
+      <div class="fact"><span>Typical</span><b>${money(d.typical)}</b></div>
+      <div class="fact"><span>Savings</span><b style="color:var(--drop)">${money(d.typical - d.price)}</b></div>
+    </div>
+    <div class="chart">
+      <div class="chart-title"><span>Fare history, last 60 days</span><span class="pill ${t.cls}">${t.label} · −${pct}%</span></div>
+      ${sparkline(d)}
+    </div>
+    <p class="fine">${fmtDate(d.out)} – ${fmtDate(d.back)} (${nights(d)} nights) · ${esc(d.airline)} · ${d.stops === 0 ? "Nonstop" : d.stops + " stop"}${d.price < low60 ? " · Lowest fare we've seen in 60 days" : ""}</p>
+    <div class="sheet-actions">
+      <a class="btn signal" href="${flightsUrl(d)}" target="_blank" rel="noopener">Check on Google Flights</a>
+      <button class="btn ghost" type="button" data-watch="${d.to}" data-price="${d.price}">${watching ? "Alert is on" : "Alert me on drops"}</button>
+    </div>
+    <p class="fine">Fares change fast. The price shown here is a sample; confirm it on the booking site.</p>`;
+  const dlg = $("#sheet");
+  if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+}
+
+/* ---------- Routing ---------- */
+const VIEWS = ["deals", "watchlist", "airports"];
+function route() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "deals";
+  VIEWS.forEach((name) => { $("#view-" + name).hidden = name !== v; });
+  document.querySelectorAll(".tabbar a").forEach((a) => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click", (e) => {
+  const chip = e.target.closest("[data-type]");
+  if (chip) { state.type = chip.dataset.type; store.set("type", state.type); renderChips(); renderDeals(); return; }
+  const deal = e.target.closest(".deal");
+  if (deal) { openDeal(Number(deal.dataset.id)); return; }
+  if (e.target.closest("[data-close]")) { $("#sheet").close?.(); $("#sheet").removeAttribute("open"); return; }
+  const watchBtn = e.target.closest("[data-watch]");
+  if (watchBtn) {
+    const to = watchBtn.dataset.watch;
+    if (!state.watches.some((w) => w.to === to)) {
+      state.watches.push({ to, target: Math.floor(Number(watchBtn.dataset.price) * 0.9 / 5) * 5 });
+      store.set("watches", state.watches); renderWatches();
+    }
+    watchBtn.textContent = "Alert is on";
+    return;
+  }
+  const rm = e.target.closest("[data-remove]");
+  if (rm) { state.watches.splice(Number(rm.dataset.remove), 1); store.set("watches", state.watches); renderWatches(); return; }
+  if (e.target.closest("#originBtn")) { location.hash = "airports"; }
+});
+
+$("#sheet").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+$("#budget").addEventListener("input", (e) => { state.budget = Number(e.target.value); store.set("budget", state.budget); renderDeals(); });
+$("#sort").addEventListener("change", (e) => { state.sort = e.target.value; store.set("sort", state.sort); renderDeals(); });
+
+$("#airportList").addEventListener("change", (e) => {
+  const code = e.target.dataset.ap;
+  if (!code) return;
+  state.origins = e.target.checked ? [...new Set([...state.origins, code])] : state.origins.filter((c) => c !== code);
+  state.origins = AIRPORTS.map((a) => a.code).filter((c) => state.origins.includes(c));
+  store.set("origins", state.origins);
+  renderHeader(); renderDeals(); renderWatches();
+});
+
+$("#addWatch").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const to = $("#watchDest").value, target = Number($("#watchTarget").value);
+  if (!target) return;
+  state.watches = state.watches.filter((w) => w.to !== to);
+  state.watches.unshift({ to, target });
+  store.set("watches", state.watches);
+  $("#watchTarget").value = "";
+  renderWatches();
+});
+
+$("#emailForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  state.email = $("#email").value.trim();
+  store.set("email", state.email);
+  $("#emailToast").textContent = state.email
+    ? "Saved on this device. Email alerts switch on once the alert server is live."
+    : "Email cleared.";
+});
+
+window.addEventListener("hashchange", route);
+renderAll();
+route();
+</script>
+</body>
+</html>
