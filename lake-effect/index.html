@@ -7,41 +7,49 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0d3b4c">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d3b4c'/%3E%3Cpath d='M12 44h40' stroke='%23e8742a' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M14 34l5 3 9-3-10-13 5-1 15 10 10-3a4 4 0 0 1 2 7L20 43a4 4 0 0 1-4-1l-5-5z' fill='%23e9f3f6'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: one phone-width app column — header, filter rail, deal list, fixed tab bar. Departure-board type for codes and fares. */
+/* Layout: one phone-width app column. Lake-blue header holding a boarding-pass "top pick",
+   sticky filter rail, scannable deal cards, fixed tab bar. Departure-board mono for codes and fares. */
 :root {
-  --bg: #eaf0f2;          /* lake-fog grey, leaning blue */
+  --bg: #e9eff1;
   --surface: #ffffff;
-  --surface-2: #f4f7f8;
+  --surface-2: #f2f6f7;
   --ink: #0e1d25;
-  --ink-2: #4b5d66;
-  --line: #d3dde1;
-  --lake: #0d3b4c;        /* Lake Erie in November */
+  --ink-2: #4f626b;
+  --ink-3: #7d8f97;
+  --line: #d5dfe3;
+  --lake: #0d3b4c;
+  --lake-2: #14526a;
   --lake-ink: #e9f3f6;
-  --signal: #e8742a;      /* runway approach light */
-  --drop: #13804f;        /* fare is below typical */
-  --drop-bg: #e0f2e8;
-  --spark-band: #dbe6ea;
+  --signal: #e8742a;
+  --signal-ink: #1f0e02;
+  --drop: #11784a;
+  --drop-bg: #dcf0e5;
+  --warm: #b4570f;
+  --shadow: 0 1px 2px rgba(14, 29, 37, .06), 0 6px 20px -8px rgba(14, 29, 37, .18);
   --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --radius: 14px;
-  --tabbar-h: 64px;
+  --r-lg: 18px;
+  --r-md: 12px;
+  --tabbar-h: 62px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a1419; --surface: #11212a; --surface-2: #0e1b22; --ink: #e6eef1; --ink-2: #93a7b0;
-    --line: #213641; --lake: #0f4a5f; --lake-ink: #e9f3f6; --signal: #f2894a; --drop: #4fd08f;
-    --drop-bg: #12352a; --spark-band: #1b3340; color-scheme: dark;
+    --bg: #081217; --surface: #0f1e26; --surface-2: #132631; --ink: #e5eef1; --ink-2: #9db0b8; --ink-3: #6d838d;
+    --line: #1f3540; --lake: #0b3242; --lake-2: #12495e; --signal: #f08c4f; --drop: #5ad69a; --drop-bg: #10342a;
+    --warm: #f0a35e; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -10px rgba(0,0,0,.6); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0a1419; --surface: #11212a; --surface-2: #0e1b22; --ink: #e6eef1; --ink-2: #93a7b0;
-  --line: #213641; --lake: #0f4a5f; --lake-ink: #e9f3f6; --signal: #f2894a; --drop: #4fd08f;
-  --drop-bg: #12352a; --spark-band: #1b3340; color-scheme: dark;
+  --bg: #081217; --surface: #0f1e26; --surface-2: #132631; --ink: #e5eef1; --ink-2: #9db0b8; --ink-3: #6d838d;
+  --line: #1f3540; --lake: #0b3242; --lake-2: #12495e; --signal: #f08c4f; --drop: #5ad69a; --drop-bg: #10342a;
+  --warm: #f0a35e; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -10px rgba(0,0,0,.6); color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -49,150 +57,246 @@ html, body { margin: 0; }
 body {
   background: var(--bg); color: var(--ink);
   font: 15px/1.45 var(--font-body);
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
 }
 body::before {
   content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
-  z-index: 10; background: var(--lake);
+  z-index: 10; background: var(--bg);
 }
 button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; border-radius: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
 
-.app { max-width: 560px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 24px); }
+.app { max-width: 560px; margin: 0 auto; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 28px); }
 .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-/* Header */
-.top { background: var(--lake); color: var(--lake-ink); padding-block: 18px 22px; }
+/* ---------- Header ---------- */
+.top {
+  background:
+    radial-gradient(120% 80% at 100% 0%, var(--lake-2) 0%, transparent 60%),
+    var(--lake);
+  color: var(--lake-ink); padding-block: 16px 20px;
+  border-radius: 0 0 26px 26px;
+}
 .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.wordmark { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 26px; letter-spacing: .01em; text-transform: uppercase; line-height: 1; margin: 0; }
+.wordmark { margin: 0; display: flex; align-items: baseline; gap: 6px; font-family: var(--font-display); font-stretch: 72%; font-weight: 850; font-size: 25px; letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
 .wordmark span { color: var(--signal); }
 .origin-btn {
-  display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(233,243,246,.3);
-  background: transparent; color: var(--lake-ink); border-radius: 999px; padding: 6px 12px;
-  font-family: var(--font-data); font-size: 13px; letter-spacing: .04em;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px;
+  border: 1px solid rgba(233, 243, 246, .28); background: rgba(233, 243, 246, .06);
+  color: var(--lake-ink); border-radius: 999px; padding: 6px 12px 6px 10px;
+  font-family: var(--font-data); font-size: 12.5px; letter-spacing: .06em;
 }
-.summary { margin-top: 18px; display: grid; gap: 4px; }
-.summary .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; opacity: .7; }
-.summary h2 { margin: 0; font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 24px; line-height: 1.15; text-wrap: balance; }
-.summary h2 b { color: var(--signal); font-weight: 800; }
-.sample-note { margin-top: 10px; font-size: 12px; opacity: .75; }
+.origin-btn svg { width: 14px; height: 14px; opacity: .8; }
+.lede { margin: 18px 0 14px; font-family: var(--font-display); font-stretch: 88%; font-weight: 650; font-size: 21px; line-height: 1.2; text-wrap: balance; }
+.lede b { color: var(--signal); font-weight: 800; }
 
-/* Filters */
-.filters { display: grid; gap: 12px; padding-block: 16px 6px; }
-.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 2px 4px; }
+/* Boarding-pass top pick */
+.pass {
+  position: relative; width: 100%; display: grid; grid-template-columns: 1fr auto; text-align: left;
+  border: 0; padding: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .45);
+  --notch: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px);
+}
+.pass-main { padding: 14px 16px 14px 18px; min-width: 0; display: grid; gap: 10px; }
+.pass-stub {
+  padding: 14px 18px 14px 16px; display: grid; align-content: center; justify-items: end; gap: 4px;
+  border-left: 2px dashed var(--line); position: relative;
+}
+.pass-stub::before, .pass-stub::after {
+  content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--lake);
+}
+.pass-stub::before { top: -10px; }
+.pass-stub::after { bottom: -10px; }
+.pass-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.pass-route { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.pass-route .iata { font-family: var(--font-data); font-weight: 600; font-size: 30px; line-height: 1; letter-spacing: .03em; }
+.pass-route .iata small { display: block; font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--ink-2); margin-top: 4px; }
+.flight-line { position: relative; height: 2px; background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 8px); }
+.flight-line svg { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; transform: translate(-50%, -50%); background: var(--surface); padding: 0 2px; color: var(--signal); }
+.pass-meta { font-size: 12.5px; color: var(--ink-2); }
+.pass-price { font-family: var(--font-data); font-weight: 600; font-size: 30px; line-height: 1; }
+.pass-was { font-size: 12px; color: var(--ink-3); text-decoration: line-through; }
+
+/* ---------- Filters (sticky) ---------- */
+.filters {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  padding-block: 14px 10px; display: grid; gap: 10px;
+}
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
-  flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
-  padding: 7px 14px; font-size: 14px; font-weight: 500;
+  flex: none; min-height: 36px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 6px 14px; font-size: 14px; font-weight: 500; color: var(--ink-2);
 }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.budget { display: flex; align-items: center; gap: 10px; flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--ink-2); }
-.budget input { flex: 1; min-width: 0; accent-color: var(--lake); }
-.budget output { font-family: var(--font-data); color: var(--ink); min-width: 4.5ch; text-align: right; }
-select {
-  font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
-  background: var(--surface); color: var(--ink);
+.controls { display: flex; align-items: center; gap: 14px; }
+.budget { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; font-size: 13px; color: var(--ink-2); }
+.budget input { flex: 1; min-width: 0; accent-color: var(--lake-2); height: 28px; }
+.budget output { font-family: var(--font-data); font-size: 13px; color: var(--ink); min-width: 5ch; text-align: right; }
+.sort { position: relative; }
+.sort select {
+  appearance: none; font: inherit; font-size: 13px; font-weight: 500; min-height: 34px;
+  padding: 6px 28px 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
 }
+.sort svg { position: absolute; right: 10px; top: 50%; width: 12px; height: 12px; transform: translateY(-50%); pointer-events: none; color: var(--ink-2); }
+.result-count { font-size: 12px; color: var(--ink-3); letter-spacing: .02em; }
 
-/* Deal list */
-.list { display: grid; gap: 10px; padding-block: 10px; }
+/* ---------- Deal cards ---------- */
+.list { display: grid; gap: 10px; }
 .deal {
-  display: grid; grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: center;
-  width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface);
-  border-radius: var(--radius); padding: 14px 14px 14px 16px;
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  display: grid; grid-template-columns: 1fr auto; gap: 12px 12px; padding: 14px 14px 12px 16px;
 }
-.deal:hover { border-color: var(--ink-2); }
-.code { font-family: var(--font-data); font-weight: 600; font-size: 26px; letter-spacing: .04em; line-height: 1; grid-row: span 2; }
-.dest { min-width: 0; }
-.dest strong { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meta { font-size: 13px; color: var(--ink-2); }
-.price { text-align: right; grid-row: span 2; display: grid; justify-items: end; gap: 3px; }
+.deal.is-steal { border-color: color-mix(in srgb, var(--signal) 55%, var(--line)); }
+.deal-open { all: unset; cursor: pointer; display: grid; grid-template-columns: 58px 1fr; gap: 12px; align-items: center; min-width: 0; }
+.deal-open::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.deal-open:focus-visible::after { outline: 2px solid var(--signal); outline-offset: 2px; }
+.deal:hover { box-shadow: var(--shadow); }
+.code { font-family: var(--font-data); font-weight: 600; font-size: 23px; letter-spacing: .03em; line-height: 1; }
+.dest { min-width: 0; display: grid; gap: 2px; }
+.dest strong { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.price { display: grid; justify-items: end; align-content: center; gap: 2px; }
 .price .now { font-family: var(--font-data); font-weight: 600; font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
-.price .was { font-size: 12px; color: var(--ink-2); text-decoration: line-through; font-variant-numeric: tabular-nums; }
-.pill {
-  display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 2px 7px;
-  font-size: 12px; font-weight: 600; background: var(--drop-bg); color: var(--drop); white-space: nowrap;
+.price .was { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.price .was s { text-decoration-thickness: 1px; }
+.deal-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.foot-chips { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px 6px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.steal { background: var(--signal); color: var(--signal-ink); }
+.pill.great { background: var(--drop-bg); color: var(--drop); }
+.pill.good { border: 1px solid var(--line); color: var(--ink-2); padding: 2px 8px; }
+.fact-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); padding: 3px 4px; white-space: nowrap; }
+.fact-chip svg { width: 14px; height: 14px; }
+.fact-chip.warm { color: var(--warm); font-weight: 500; }
+.fact-chip.alt { color: var(--signal); font-weight: 600; }
+.bell {
+  position: relative; z-index: 1; margin-left: auto; width: 36px; height: 36px; display: grid; place-items: center;
+  border: 1px solid var(--line); background: var(--surface-2); border-radius: 50%; color: var(--ink-2);
 }
-.pill.steal { background: var(--signal); color: #1a0d03; }
-.tags { grid-column: 2 / 3; display: flex; gap: 6px; flex-wrap: wrap; }
-.tag { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
-.tag.alt { border-color: var(--signal); color: var(--signal); }
-.empty { text-align: center; padding: 40px 16px; color: var(--ink-2); }
+.bell svg { width: 17px; height: 17px; }
+.bell[aria-pressed="true"] { background: var(--lake); color: var(--lake-ink); border-color: var(--lake); }
+.empty { text-align: center; padding: 36px 20px; color: var(--ink-2); display: grid; gap: 12px; justify-items: center; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r-lg); }
+.empty p { margin: 0; max-width: 30ch; }
 
-/* Section titles */
-.page-title { font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 22px; margin: 22px 0 4px; }
-.page-sub { color: var(--ink-2); margin: 0 0 14px; font-size: 14px; }
+/* ---------- Page sections ---------- */
+.page-head { padding-block: 22px 14px; }
+.page-title { font-family: var(--font-display); font-stretch: 85%; font-weight: 750; font-size: 24px; margin: 0 0 4px; }
+.page-sub { color: var(--ink-2); margin: 0; font-size: 14px; max-width: 46ch; }
+.section-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 22px 0 8px; }
 
-/* Watchlist */
-.watch { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
-.watch .status { font-size: 13px; }
-.watch .hit { color: var(--drop); font-weight: 600; }
-.icon-btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
-.add-watch { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-top: 14px; }
-.add-watch input, .add-watch select, .field input {
-  font: inherit; font-size: 14px; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line);
-  background: var(--surface); color: var(--ink); min-width: 0; width: 100%;
+/* Alerts */
+.watch { display: grid; grid-template-columns: 52px 1fr auto; gap: 6px 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 14px 14px 16px; }
+.watch .code { font-size: 20px; }
+.watch-name { font-weight: 600; }
+.watch-name { min-width: 0; }
+.watch-name small { display: block; font-weight: 400; color: var(--ink-2); font-size: 13px; }
+.meter { grid-column: 2 / 4; display: grid; gap: 6px; }
+.meter-track { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.meter-fill { height: 100%; border-radius: 3px; background: var(--ink-3); }
+.meter-fill.hit { background: var(--drop); }
+.meter-text { font-size: 12.5px; color: var(--ink-2); }
+.meter-text b { color: var(--drop); font-weight: 600; }
+.remove { border: 0; background: none; color: var(--ink-3); font-size: 13px; padding: 8px; min-height: 36px; }
+.add-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px; display: grid; gap: 12px; }
+.add-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+.input-wrap { display: grid; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); min-width: 0; }
+.input-wrap input, .input-wrap select {
+  font: inherit; font-size: 15px; font-weight: 400; color: var(--ink); min-height: 44px; padding: 9px 12px;
+  border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-2); min-width: 0; width: 100%;
 }
-.btn { border: 0; background: var(--lake); color: var(--lake-ink); border-radius: 10px; padding: 10px 16px; font-weight: 600; }
-.btn.signal { background: var(--signal); color: #1a0d03; }
+.btn { border: 0; min-height: 46px; background: var(--lake); color: var(--lake-ink); border-radius: var(--r-md); padding: 11px 18px; font-weight: 600; font-size: 15px; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.signal { background: var(--signal); color: var(--signal-ink); }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn svg { width: 16px; height: 16px; }
 
 /* Airports */
 .airports { display: grid; gap: 8px; }
-.airport { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; }
-.airport input { width: 20px; height: 20px; accent-color: var(--lake); }
-.airport .code { font-size: 20px; grid-row: auto; }
-.drive { font-family: var(--font-data); font-size: 12px; color: var(--ink-2); }
-.field { display: grid; gap: 6px; margin-top: 18px; font-size: 14px; }
-.toast { min-height: 1.4em; font-size: 13px; color: var(--drop); margin-top: 8px; }
+.airport { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 12px 14px 12px 16px; cursor: pointer; }
+.airport-info { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; min-width: 0; }
+.airport .code { font-size: 20px; }
+.airport strong { display: block; font-weight: 600; }
+.airport .drive { font-size: 12.5px; color: var(--ink-2); }
+.switch { position: relative; width: 46px; height: 28px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: background .2s; }
+.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s var(--ease); }
+.switch input:checked + span { background: var(--lake-2); }
+.switch input:checked + span::after { transform: translateX(18px); }
+.switch input:disabled + span { opacity: .55; }
+.switch input:focus-visible + span { outline: 2px solid var(--signal); outline-offset: 2px; }
 
-/* Tab bar */
+/* ---------- Tab bar ---------- */
 .tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface);
-  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
 }
 .tabbar nav { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); height: var(--tabbar-h); }
-.tabbar a { display: grid; place-items: center; align-content: center; gap: 2px; text-decoration: none; color: var(--ink-2); font-size: 12px; font-weight: 500; }
+.tabbar a { position: relative; display: grid; place-items: center; align-content: center; gap: 3px; text-decoration: none; color: var(--ink-3); font-size: 11.5px; font-weight: 500; }
 .tabbar a svg { width: 22px; height: 22px; }
-.tabbar a[aria-current="page"] { color: var(--lake); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar a[aria-current="page"] { color: var(--signal); } }
-:root[data-theme="dark"] .tabbar a[aria-current="page"] { color: var(--signal); }
-.badge { font-family: var(--font-data); font-size: 10px; background: var(--signal); color: #1a0d03; border-radius: 999px; padding: 0 5px; margin-left: 3px; }
+.tabbar a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+.tabbar a[aria-current="page"]::before { content: ""; position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--signal); }
+.tab-icon { position: relative; }
+.badge { position: absolute; top: -4px; right: -10px; font-family: var(--font-data); font-size: 10px; font-weight: 600; line-height: 16px; min-width: 16px; text-align: center; background: var(--signal); color: var(--signal-ink); border-radius: 999px; padding: 0 4px; }
 
-/* Detail sheet */
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; left: 50%; z-index: 20; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 500;
+  max-width: calc(100% - 32px); width: max-content; box-shadow: var(--shadow);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Detail sheet ---------- */
 dialog {
   border: 0; padding: 0; width: min(560px, 100%); max-width: 100%; max-height: 92vh; margin: auto auto 0;
-  border-radius: 20px 20px 0 0; background: var(--surface); color: var(--ink);
+  border-radius: 24px 24px 0 0; background: var(--surface); color: var(--ink); overflow-y: auto;
 }
-dialog::backdrop { background: rgba(6, 18, 24, .55); }
+dialog::backdrop { background: rgba(4, 14, 19, .55); }
 .sheet { padding-block: 10px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 16px; }
-.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto; }
+.grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto; }
 .sheet-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
-.route { font-family: var(--font-data); font-size: 14px; color: var(--ink-2); letter-spacing: .04em; }
-.sheet h3 { margin: 2px 0 0; font-family: var(--font-display); font-stretch: 85%; font-weight: 800; font-size: 28px; line-height: 1.05; }
-.close { border: 0; background: var(--surface-2); border-radius: 999px; width: 34px; height: 34px; font-size: 18px; line-height: 1; }
+.route { font-family: var(--font-data); font-size: 12.5px; color: var(--ink-2); letter-spacing: .06em; }
+.sheet h3 { margin: 4px 0 0; font-family: var(--font-display); font-stretch: 85%; font-weight: 800; font-size: 30px; line-height: 1.05; }
+.close { border: 0; background: var(--surface-2); border-radius: 50%; width: 36px; height: 36px; display: grid; place-items: center; flex: none; }
+.close svg { width: 16px; height: 16px; }
 .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.fact { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-width: 0; }
-.fact span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
-.fact b { font-family: var(--font-data); font-size: 17px; font-variant-numeric: tabular-nums; }
-.chart { background: var(--surface-2); border-radius: 12px; padding: 12px 12px 8px; }
-.chart-title { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; gap: 8px; }
+.fact { background: var(--surface-2); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
+.fact span { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
+.fact b { font-family: var(--font-data); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fact.save b { color: var(--drop); }
+.chart { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 12px 6px; }
+.chart-title { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 500; color: var(--ink-2); margin-bottom: 4px; gap: 8px; }
 .chart svg { width: 100%; height: auto; display: block; }
-.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.sheet-actions a.btn { text-align: center; text-decoration: none; }
-.fine { font-size: 12px; color: var(--ink-2); margin: 0; }
+.trip { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: var(--r-md); overflow: hidden; }
+.trip div { background: var(--surface-2); padding: 10px 12px; font-size: 13px; color: var(--ink-2); }
+.trip b { display: block; color: var(--ink); font-weight: 600; font-size: 14px; }
+.sheet-actions { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; }
+.fine { font-size: 12px; color: var(--ink-3); margin: 0; text-align: center; }
 
-@media (max-width: 380px) {
-  .code { font-size: 22px; }
-  .add-watch { grid-template-columns: 1fr 1fr; }
-  .add-watch .btn { grid-column: span 2; }
+@media (max-width: 370px) {
+  .pass-route .iata, .pass-price { font-size: 25px; }
+  .deal-open { grid-template-columns: 50px 1fr; }
+  .code { font-size: 20px; }
+  .add-row { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .deal { transition: border-color .15s, transform .15s; }
+  .deal, .chip, .bell { transition: box-shadow .2s, background-color .2s, color .2s, border-color .2s; }
   .deal:active { transform: scale(.99); }
+  .toast { transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  dialog[open] { animation: rise .32s var(--ease); }
+  dialog[open]::backdrop { animation: fade .25s ease; }
+  @keyframes rise { from { transform: translateY(40px); opacity: .4; } }
+  @keyframes fade { from { opacity: 0; } }
 }
 </style>
 </head>
@@ -201,60 +305,72 @@ dialog::backdrop { background: rgba(6, 18, 24, .55); }
   <header class="top gutter">
     <div class="brand">
       <h1 class="wordmark">Lake <span>Effect</span></h1>
-      <button class="origin-btn" id="originBtn" type="button" aria-label="Change departure airports"></button>
+      <button class="origin-btn" id="originBtn" type="button" aria-label="Change departure airports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        <span id="originText"></span>
+      </button>
     </div>
-    <div class="summary" id="summary"></div>
+    <p class="lede" id="lede"></p>
+    <div id="topPick"></div>
   </header>
 
   <main>
     <!-- DEALS -->
-    <section id="view-deals" class="gutter">
-      <div class="filters">
+    <section id="view-deals" aria-labelledby="dealsHeading">
+      <h2 class="sr" id="dealsHeading">Deals</h2>
+      <div class="filters gutter">
         <div class="chips" role="group" aria-label="Trip type" id="chips"></div>
-        <div class="row">
-          <label class="budget" for="budget">Under
+        <div class="controls">
+          <label class="budget" for="budget"><span>Max</span>
             <input type="range" id="budget" min="100" max="900" step="25" value="900">
-            <output id="budgetOut">$900</output>
+            <output id="budgetOut" for="budget">Any</output>
           </label>
-          <label class="sr" for="sort">Sort deals</label>
-          <select id="sort">
-            <option value="drop">Biggest drop</option>
-            <option value="price">Lowest fare</option>
-            <option value="soon">Leaving soonest</option>
-          </select>
+          <label class="sort" for="sort"><span class="sr">Sort deals</span>
+            <select id="sort">
+              <option value="drop">Biggest drop</option>
+              <option value="price">Lowest fare</option>
+              <option value="soon">Soonest</option>
+            </select>
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>
+          </label>
         </div>
+        <div class="result-count" id="resultCount" aria-live="polite"></div>
       </div>
-      <div class="list" id="dealList"></div>
+      <div class="list gutter" id="dealList"></div>
     </section>
 
-    <!-- WATCHLIST -->
+    <!-- ALERTS -->
     <section id="view-watchlist" class="gutter" hidden>
-      <h2 class="page-title">Fare alerts</h2>
-      <p class="page-sub">Pick a destination and a target price. You'll get a heads-up when a fare from your airports drops under it.</p>
+      <div class="page-head">
+        <h2 class="page-title">Fare alerts</h2>
+        <p class="page-sub">Set a target price for a place you want to go. We'll flag it the moment a fare from your airports drops under it.</p>
+      </div>
       <div class="list" id="watchList"></div>
-      <form class="add-watch" id="addWatch">
-        <label class="sr" for="watchDest">Destination</label>
-        <select id="watchDest"></select>
-        <label class="sr" for="watchTarget">Target price</label>
-        <input id="watchTarget" type="number" inputmode="numeric" min="30" max="3000" step="5" placeholder="Target $" required>
-        <button class="btn" type="submit">Add alert</button>
+      <p class="section-label">New alert</p>
+      <form class="add-card" id="addWatch">
+        <div class="add-row">
+          <label class="input-wrap" for="watchDest">Destination<select id="watchDest"></select></label>
+          <label class="input-wrap" for="watchTarget">Target round trip
+            <input id="watchTarget" type="number" inputmode="numeric" min="30" max="3000" step="5" placeholder="$ 250" required>
+          </label>
+        </div>
+        <button class="btn" type="submit">Create alert</button>
       </form>
     </section>
 
     <!-- AIRPORTS -->
     <section id="view-airports" class="gutter" hidden>
-      <h2 class="page-title">Home airports</h2>
-      <p class="page-sub">Hopkins is home base. Add the drive-to airports when a cheaper fare is worth the trip.</p>
+      <div class="page-head">
+        <h2 class="page-title">Home airports</h2>
+        <p class="page-sub">Hopkins is home base. Switch on the drive-to airports when a cheaper fare is worth the trip down I-77 or I-71.</p>
+      </div>
       <div class="airports" id="airportList"></div>
-      <form id="emailForm">
-        <div class="field">
-          <label for="email">Email for deal alerts</label>
+      <p class="section-label">Deal emails</p>
+      <form class="add-card" id="emailForm">
+        <label class="input-wrap" for="email">Email address
           <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
-        </div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn" type="submit">Save</button>
-        </div>
-        <p class="toast" id="emailToast" role="status"></p>
+        </label>
+        <button class="btn" type="submit">Save email</button>
       </form>
     </section>
   </main>
@@ -263,64 +379,68 @@ dialog::backdrop { background: rgba(6, 18, 24, .55); }
 <div class="tabbar">
   <nav aria-label="Main">
     <a href="#deals" data-view="deals">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 19h19"/><path d="M3.8 13.6 6 15l4-1.2-4.6-6 2-.6 7 4.7 4.8-1.4a1.8 1.8 0 0 1 1 3.4L7 17.6a2 2 0 0 1-1.9-.4L2.6 14.9z"/></svg>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 20h19"/><path d="M3.8 13.6 6 15l4-1.2-4.6-6 2-.6 7 4.7 4.8-1.4a1.8 1.8 0 0 1 1 3.4L7 17.6a2 2 0 0 1-1.9-.4L2.6 14.9z"/></svg></span>
       Deals
     </a>
     <a href="#watchlist" data-view="watchlist">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
-      <span>Alerts<span class="badge" id="hitBadge" hidden></span></span>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span class="badge" id="hitBadge" hidden></span></span>
+      Alerts
     </a>
     <a href="#airports" data-view="airports">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
       Airports
     </a>
   </nav>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <dialog id="sheet" aria-labelledby="sheetTitle"><div class="sheet gutter" id="sheetBody"></div></dialog>
 
 <script>
-/* ---------- Sample data (replace with live fares from the API in v2) ---------- */
+/* ---------- Sample data (swap for live fares in v2) ---------- */
 const AIRPORTS = [
-  { code: "CLE", name: "Cleveland Hopkins", drive: "Home", locked: true },
-  { code: "CAK", name: "Akron-Canton", drive: "55 min" },
-  { code: "CMH", name: "Columbus John Glenn", drive: "2 hr 10 min" },
-  { code: "PIT", name: "Pittsburgh", drive: "2 hr 10 min" },
-  { code: "DTW", name: "Detroit Metro", drive: "2 hr 40 min" },
+  { code: "CLE", name: "Cleveland Hopkins", drive: "Home airport", locked: true },
+  { code: "CAK", name: "Akron-Canton", drive: "55 min drive" },
+  { code: "CMH", name: "Columbus John Glenn", drive: "2 hr 10 min drive" },
+  { code: "PIT", name: "Pittsburgh", drive: "2 hr 10 min drive" },
+  { code: "DTW", name: "Detroit Metro", drive: "2 hr 40 min drive" },
 ];
 
 const TYPES = [
-  { id: "all", label: "All deals" },
-  { id: "warm", label: "Warm weather" },
+  { id: "all", label: "All" },
+  { id: "warm", label: "Warm escapes" },
   { id: "city", label: "City breaks" },
   { id: "intl", label: "International" },
-  { id: "nonstop", label: "Nonstop only" },
+  { id: "nonstop", label: "Nonstop" },
 ];
 
-// price/typical are round-trip economy in USD. Dates are travel windows.
+// Typical average high (°F) in Cleveland by month, for the "escape the cold" comparison.
+const CLE_HIGH = { 0: 34, 1: 36, 2: 46, 3: 59, 11: 39 };
+
+// Round-trip economy, USD. `high` = typical average high (°F) at the destination that month.
 const DEALS = [
-  { id: 1,  to: "MCO", city: "Orlando",       from: "CLE", price: 98,  typical: 236, out: "2027-01-21", back: "2027-01-26", airline: "Frontier",  stops: 0, types: ["warm"] },
-  { id: 2,  to: "CUN", city: "Cancún",        from: "CLE", price: 312, typical: 545, out: "2027-02-04", back: "2027-02-11", airline: "United",    stops: 0, types: ["warm","intl"] },
-  { id: 3,  to: "LAS", city: "Las Vegas",     from: "CLE", price: 148, typical: 298, out: "2026-12-04", back: "2026-12-07", airline: "Spirit",    stops: 0, types: ["city"] },
-  { id: 4,  to: "LAX", city: "Los Angeles",   from: "CLE", price: 219, typical: 389, out: "2027-01-14", back: "2027-01-20", airline: "American",  stops: 1, types: ["city","warm"] },
-  { id: 5,  to: "FLL", city: "Fort Lauderdale", from: "CLE", price: 134, typical: 258, out: "2027-02-12", back: "2027-02-17", airline: "Spirit", stops: 0, types: ["warm"] },
-  { id: 6,  to: "DUB", city: "Dublin",        from: "CLE", price: 498, typical: 892, out: "2027-03-02", back: "2027-03-10", airline: "Aer Lingus", stops: 1, types: ["intl","city"] },
-  { id: 7,  to: "BOS", city: "Boston",        from: "CLE", price: 128, typical: 214, out: "2026-12-11", back: "2026-12-14", airline: "JetBlue",   stops: 0, types: ["city"] },
-  { id: 8,  to: "DEN", city: "Denver",        from: "CLE", price: 176, typical: 284, out: "2027-01-08", back: "2027-01-12", airline: "Southwest", stops: 0, types: ["city"] },
-  { id: 9,  to: "SJU", city: "San Juan",      from: "PIT", price: 239, typical: 412, out: "2027-02-18", back: "2027-02-24", airline: "Spirit",    stops: 0, types: ["warm"] },
-  { id: 10, to: "TPA", city: "Tampa",         from: "CAK", price: 109, typical: 202, out: "2027-01-29", back: "2027-02-02", airline: "Breeze",    stops: 0, types: ["warm"] },
-  { id: 11, to: "LIS", city: "Lisbon",        from: "DTW", price: 541, typical: 868, out: "2027-03-16", back: "2027-03-24", airline: "Delta",     stops: 1, types: ["intl","city"] },
-  { id: 12, to: "PHX", city: "Phoenix",       from: "CLE", price: 207, typical: 318, out: "2027-02-25", back: "2027-03-02", airline: "Southwest", stops: 1, types: ["warm","city"] },
-  { id: 13, to: "NYC", city: "New York",      from: "CLE", price: 112, typical: 186, out: "2026-12-05", back: "2026-12-07", airline: "United",    stops: 0, types: ["city"] },
-  { id: 14, to: "PUJ", city: "Punta Cana",    from: "CLE", price: 389, typical: 586, out: "2027-03-06", back: "2027-03-13", airline: "Frontier",  stops: 0, types: ["warm","intl"] },
-  { id: 15, to: "SEA", city: "Seattle",       from: "CMH", price: 238, typical: 352, out: "2027-04-09", back: "2027-04-14", airline: "Alaska",    stops: 1, types: ["city"] },
-  { id: 16, to: "NAS", city: "Nassau",        from: "CLE", price: 347, typical: 498, out: "2027-02-20", back: "2027-02-25", airline: "American",  stops: 1, types: ["warm","intl"] },
+  { id: 1,  to: "MCO", city: "Orlando",         from: "CLE", price: 98,  typical: 236, out: "2027-01-21", back: "2027-01-26", airline: "Frontier",   stops: 0, high: 72, types: ["warm"] },
+  { id: 2,  to: "CUN", city: "Cancún",          from: "CLE", price: 312, typical: 470, out: "2027-02-04", back: "2027-02-11", airline: "United",     stops: 0, high: 84, types: ["warm","intl"] },
+  { id: 3,  to: "LAS", city: "Las Vegas",       from: "CLE", price: 148, typical: 245, out: "2026-12-04", back: "2026-12-07", airline: "Spirit",     stops: 0, high: 57, types: ["city"] },
+  { id: 4,  to: "LAX", city: "Los Angeles",     from: "CLE", price: 219, typical: 330, out: "2027-01-14", back: "2027-01-20", airline: "American",   stops: 1, high: 68, types: ["city","warm"] },
+  { id: 5,  to: "FLL", city: "Fort Lauderdale", from: "CLE", price: 134, typical: 205, out: "2027-02-12", back: "2027-02-17", airline: "Spirit",     stops: 0, high: 77, types: ["warm"] },
+  { id: 6,  to: "DUB", city: "Dublin",          from: "CLE", price: 498, typical: 892, out: "2027-03-02", back: "2027-03-10", airline: "Aer Lingus", stops: 1, high: 50, types: ["intl","city"] },
+  { id: 7,  to: "BOS", city: "Boston",          from: "CLE", price: 128, typical: 176, out: "2026-12-11", back: "2026-12-14", airline: "JetBlue",    stops: 0, high: 41, types: ["city"] },
+  { id: 8,  to: "DEN", city: "Denver",          from: "CLE", price: 176, typical: 238, out: "2027-01-08", back: "2027-01-12", airline: "Southwest",  stops: 0, high: 45, types: ["city"] },
+  { id: 9,  to: "SJU", city: "San Juan",        from: "PIT", price: 239, typical: 330, out: "2027-02-18", back: "2027-02-24", airline: "Spirit",     stops: 0, high: 84, types: ["warm"] },
+  { id: 10, to: "TPA", city: "Tampa",           from: "CAK", price: 109, typical: 168, out: "2027-01-29", back: "2027-02-02", airline: "Breeze",     stops: 0, high: 71, types: ["warm"] },
+  { id: 11, to: "LIS", city: "Lisbon",          from: "DTW", price: 541, typical: 760, out: "2027-03-16", back: "2027-03-24", airline: "Delta",      stops: 1, high: 64, types: ["intl","city"] },
+  { id: 12, to: "PHX", city: "Phoenix",         from: "CLE", price: 207, typical: 262, out: "2027-02-25", back: "2027-03-02", airline: "Southwest",  stops: 1, high: 71, types: ["warm","city"] },
+  { id: 13, to: "NYC", city: "New York",        from: "CLE", price: 112, typical: 140, out: "2026-12-05", back: "2026-12-07", airline: "United",     stops: 0, high: 44, types: ["city"] },
+  { id: 14, to: "PUJ", city: "Punta Cana",      from: "CLE", price: 389, typical: 470, out: "2027-03-06", back: "2027-03-13", airline: "Frontier",   stops: 0, high: 84, types: ["warm","intl"] },
+  { id: 15, to: "SEA", city: "Seattle",         from: "CMH", price: 238, typical: 290, out: "2027-04-09", back: "2027-04-14", airline: "Alaska",     stops: 1, high: 58, types: ["city"] },
+  { id: 16, to: "NAS", city: "Nassau",          from: "CLE", price: 347, typical: 420, out: "2027-02-20", back: "2027-02-25", airline: "American",   stops: 1, high: 78, types: ["warm","intl"] },
 ];
 
-/* ---------- Storage (per-device; wrapped so the app works without it) ---------- */
+/* ---------- Storage (per device; the app works without it) ---------- */
 const store = {
-  get(key, fallback) { try { const v = localStorage.getItem("lakeeffect:" + key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
-  set(key, value) { try { localStorage.setItem("lakeeffect:" + key, JSON.stringify(value)); } catch {} },
+  get(k, f) { try { const v = localStorage.getItem("lakeeffect:" + k); return v ? JSON.parse(v) : f; } catch { return f; } },
+  set(k, v) { try { localStorage.setItem("lakeeffect:" + k, JSON.stringify(v)); } catch {} },
 };
 
 const state = {
@@ -328,10 +448,10 @@ const state = {
   budget: store.get("budget", 900),
   sort: store.get("sort", "drop"),
   origins: store.get("origins", ["CLE", "CAK"]),
-  watches: store.get("watches", [
-    { to: "CUN", target: 350, example: true },
-    { to: "DUB", target: 450, example: true },
-    { to: "LAX", target: 250, example: true },
+  watches: store.get("watches2", [
+    { to: "CUN", target: 300, example: true },
+    { to: "DUB", target: 520, example: true },
+    { to: "LAX", target: 199, example: true },
   ]),
   email: store.get("email", ""),
 };
@@ -340,83 +460,116 @@ const state = {
 const $ = (s) => document.querySelector(s);
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
 const dropPct = (d) => Math.round((1 - d.price / d.typical) * 100);
-const tier = (pct) => pct >= 40 ? { label: "Steal", cls: "steal" } : pct >= 25 ? { label: "Great", cls: "" } : { label: "Good", cls: "" };
-const fmtDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const nights = (d) => Math.round((new Date(d.back) - new Date(d.out)) / 864e5);
+const tier = (p) => p >= 40 ? { label: "Steal", cls: "steal" } : p >= 25 ? { label: "Great", cls: "great" } : { label: "Good", cls: "good" };
+const day = (iso) => new Date(iso + "T12:00:00");
+const fmt = (iso, o = { month: "short", day: "numeric" }) => day(iso).toLocaleDateString("en-US", o);
+const range = (d) => {
+  const a = day(d.out), b = day(d.back);
+  return a.getMonth() === b.getMonth() ? `${fmt(d.out)} – ${b.getDate()}` : `${fmt(d.out)} – ${fmt(d.back)}`;
+};
+const nights = (d) => Math.round((day(d.back) - day(d.out)) / 864e5);
+const homeHigh = (d) => CLE_HIGH[day(d.out).getMonth()] ?? 50;
+const isEscape = (d) => d.high - homeHigh(d) >= 20;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const cityOf = (code) => DEALS.find((d) => d.to === code)?.city ?? code;
+const watching = (code) => state.watches.some((w) => w.to === code);
 
-function visibleDeals() {
-  return DEALS.filter((d) => state.origins.includes(d.from));
-}
+const ICON = {
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  car: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><circle cx="8" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+  plane: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>',
+  ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+};
+
+function visibleDeals() { return DEALS.filter((d) => state.origins.includes(d.from)); }
 
 function filteredDeals() {
   let list = visibleDeals().filter((d) => d.price <= state.budget);
   if (state.type === "nonstop") list = list.filter((d) => d.stops === 0);
   else if (state.type !== "all") list = list.filter((d) => d.types.includes(state.type));
-  const sorters = {
-    drop: (a, b) => dropPct(b) - dropPct(a),
-    price: (a, b) => a.price - b.price,
-    soon: (a, b) => a.out.localeCompare(b.out),
-  };
-  return list.sort(sorters[state.sort]);
+  const by = { drop: (a, b) => dropPct(b) - dropPct(a), price: (a, b) => a.price - b.price, soon: (a, b) => a.out.localeCompare(b.out) };
+  return list.sort(by[state.sort]);
 }
 
-// Deterministic 60-day price history that ends at today's fare.
+// Deterministic 60-day fare history ending at today's fare.
 function history(d) {
-  let seed = d.id * 9301 + 49297;
+  let seed = d.id * 7919 + 104729;
   const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const pts = [];
-  let p = d.typical * (0.95 + rand() * 0.1);
+  let p = d.typical * (0.97 + rand() * 0.08);
   for (let i = 0; i < 60; i++) {
-    const pull = (d.typical - p) * 0.15;
-    p += pull + (rand() - 0.5) * d.typical * 0.08;
-    if (i > 52) p += (d.price - p) * 0.45; // the drop
-    pts.push(i === 59 ? d.price : Math.max(d.price * 1.02, p));
+    p += (d.typical - p) * 0.18 + (rand() - 0.5) * d.typical * 0.07;
+    if (i > 51) p += (d.price - p) * 0.4;
+    pts.push(i === 59 ? d.price : Math.max(d.price * 1.04, Math.round(p)));
   }
   return pts;
 }
 
-function sparkline(d) {
+function chart(d) {
   const pts = history(d);
-  const W = 320, H = 110, padL = 34, padR = 8, padT = 8, padB = 18;
-  const max = Math.max(...pts, d.typical) * 1.05, min = Math.min(...pts) * 0.9;
-  const x = (i) => padL + (i / (pts.length - 1)) * (W - padL - padR);
-  const y = (v) => padT + (1 - (v - min) / (max - min)) * (H - padT - padB);
+  const W = 330, H = 128, L = 40, R = 10, T = 12, B = 22;
+  const max = Math.max(...pts, d.typical) * 1.06, min = Math.min(...pts) * 0.86;
+  const x = (i) => L + (i / (pts.length - 1)) * (W - L - R);
+  const y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
   const line = pts.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
-  const area = line + ` L${x(pts.length - 1)} ${H - padB} L${x(0)} ${H - padB} Z`;
-  const bandTop = y(d.typical * 1.08), bandBot = y(d.typical * 0.92);
-  const ex = x(pts.length - 1), ey = y(d.price);
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fare over the last 60 days, ending at ${money(d.price)} against a typical ${money(d.typical)}">
-    <rect x="${padL}" y="${bandTop}" width="${W - padL - padR}" height="${bandBot - bandTop}" fill="var(--spark-band)"/>
-    <text x="${padL - 4}" y="${y(d.typical) + 4}" text-anchor="end" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--ink-2)">${money(d.typical)}</text>
-    <text x="${padL - 4}" y="${ey + 4}" text-anchor="end" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--drop)">${money(d.price)}</text>
-    <path d="${area}" fill="var(--drop)" opacity=".1"/>
-    <path d="${line}" fill="none" stroke="var(--ink-2)" stroke-width="1.6" stroke-linejoin="round"/>
+  const area = `${line} L${x(pts.length - 1)} ${H - B} L${x(0)} ${H - B} Z`;
+  const ex = x(pts.length - 1), ey = y(d.price), ty = y(d.typical);
+  const gid = "g" + d.id;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fare over the last 60 days: typical around ${money(d.typical)}, now ${money(d.price)}">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ink-2)" stop-opacity=".16"/><stop offset="1" stop-color="var(--ink-2)" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--line)" stroke-width="1"/>
+    <path d="${area}" fill="url(#${gid})"/>
+    <line x1="${L}" x2="${W - R}" y1="${ty}" y2="${ty}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 4"/>
+    <text x="${L - 6}" y="${ty + 3.5}" text-anchor="end" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--ink-2)">${money(d.typical)}</text>
+    <path d="${line}" fill="none" stroke="var(--ink)" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${ex}" cy="${ey}" r="9" fill="var(--drop)" opacity=".18"/>
     <circle cx="${ex}" cy="${ey}" r="4.5" fill="var(--drop)" stroke="var(--surface)" stroke-width="2"/>
-    <text x="${padL}" y="${H - 4}" font-size="10" fill="var(--ink-2)">60 days ago</text>
-    <text x="${W - padR}" y="${H - 4}" font-size="10" text-anchor="end" fill="var(--ink-2)">Today</text>
+    <text x="${L - 6}" y="${ey + 3.5}" text-anchor="end" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--drop)">${money(d.price)}</text>
+    <text x="${L}" y="${H - 6}" font-size="10" fill="var(--ink-3)">60 days ago</text>
+    <text x="${W - R}" y="${H - 6}" font-size="10" text-anchor="end" fill="var(--ink-3)">Today</text>
   </svg>`;
 }
 
 function flightsUrl(d) {
-  const q = `Flights from ${d.from} to ${d.to} on ${d.out} through ${d.back}`;
-  return "https://www.google.com/travel/flights?q=" + encodeURIComponent(q);
+  return "https://www.google.com/travel/flights?q=" + encodeURIComponent(`Flights from ${d.from} to ${d.to} on ${d.out} through ${d.back}`);
 }
+const bestFor = (code) => visibleDeals().filter((d) => d.to === code).sort((a, b) => a.price - b.price)[0];
 
-function bestFor(code) {
-  return visibleDeals().filter((d) => d.to === code).sort((a, b) => a.price - b.price)[0];
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
 }
 
 /* ---------- Render ---------- */
 function renderHeader() {
-  $("#originBtn").textContent = state.origins.join(" · ") + " ▾";
+  $("#originText").textContent = state.origins.join(" · ");
   const list = visibleDeals();
   const big = list.filter((d) => dropPct(d) >= 25).length;
+  $("#lede").innerHTML = `<b>${big} fares</b> from Northeast Ohio are at least 25% under their usual price this week.`;
   const best = list.slice().sort((a, b) => dropPct(b) - dropPct(a))[0];
-  $("#summary").innerHTML = `
-    <span class="eyebrow">This week from Northeast Ohio</span>
-    <h2><b>${big}</b> fares at least 25% under normal${best ? ` — best is ${esc(best.city)} for ${money(best.price)}` : ""}</h2>
-    <p class="sample-note">Sample fares for the prototype. Live prices plug in next.</p>`;
+  if (!best) { $("#topPick").innerHTML = ""; return; }
+  const ap = AIRPORTS.find((a) => a.code === best.from);
+  $("#topPick").innerHTML = `
+    <button class="pass" type="button" data-open="${best.id}" aria-label="Top pick: ${esc(best.city)} for ${money(best.price)}, ${dropPct(best)}% under typical. Open details.">
+      <span class="pass-main">
+        <span class="pass-label"><span>Top pick this week</span></span>
+        <span class="pass-route">
+          <span class="iata">${best.from}<small>${esc(ap.name.split(" ")[0])}</small></span>
+          <span class="flight-line">${ICON.plane}</span>
+          <span class="iata">${best.to}<small>${esc(best.city)}</small></span>
+        </span>
+        <span class="pass-meta">${range(best)} · ${nights(best)} nights · ${best.stops ? "1 stop" : "Nonstop"}</span>
+      </span>
+      <span class="pass-stub">
+        <span class="pill ${tier(dropPct(best)).cls}">−${dropPct(best)}%</span>
+        <span class="pass-price">${money(best.price)}</span>
+        <span class="pass-was">${money(best.typical)}</span>
+      </span>
+    </button>`;
 }
 
 function renderChips() {
@@ -425,17 +578,21 @@ function renderChips() {
 }
 
 function dealCard(d) {
-  const pct = dropPct(d), t = tier(pct);
-  return `<button class="deal" type="button" data-id="${d.id}" aria-label="${esc(d.city)}, ${money(d.price)} round trip, ${pct}% below typical">
-    <span class="code">${d.to}</span>
-    <span class="dest"><strong>${esc(d.city)}</strong><span class="meta">${fmtDate(d.out)} – ${fmtDate(d.back)} · ${esc(d.airline)}</span></span>
-    <span class="price"><span class="now">${money(d.price)}</span><span class="was">${money(d.typical)}</span><span class="pill ${t.cls}">${t.label} · −${pct}%</span></span>
-    <span class="tags">
-      ${d.from !== "CLE" ? `<span class="tag alt">from ${d.from}</span>` : ""}
-      <span class="tag">${d.stops === 0 ? "Nonstop" : d.stops + " stop"}</span>
-      <span class="tag">${nights(d)} nights</span>
-    </span>
-  </button>`;
+  const p = dropPct(d), t = tier(p), on = watching(d.to);
+  return `<article class="deal${t.cls === "steal" ? " is-steal" : ""}">
+    <button class="deal-open" type="button" data-open="${d.id}" aria-label="${esc(d.city)}: ${money(d.price)} round trip, ${p}% under typical. Open details.">
+      <span class="code">${d.to}</span>
+      <span class="dest"><strong>${esc(d.city)}</strong><span class="meta">${range(d)} · ${nights(d)} nights</span></span>
+    </button>
+    <span class="price"><span class="now">${money(d.price)}</span><span class="was">usually <s>${money(d.typical)}</s></span></span>
+    <div class="deal-foot">
+      <span class="foot-chips"><span class="pill ${t.cls}">${t.label} · −${p}%</span>
+      <span class="fact-chip">${esc(d.airline)} · ${d.stops === 0 ? "nonstop" : "1 stop"}</span>
+      ${d.from !== "CLE" ? `<span class="fact-chip alt">${ICON.car}from ${d.from}</span>` : ""}
+      ${isEscape(d) ? `<span class="fact-chip warm" title="Typical high there vs. Cleveland that month">${ICON.sun}${d.high}° vs ${homeHigh(d)}°</span>` : ""}</span>
+      <button class="bell" type="button" data-bell="${d.to}" data-price="${d.price}" aria-pressed="${on}" aria-label="${on ? "Alert on" : "Set alert"} for ${esc(d.city)}">${ICON.bell}</button>
+    </div>
+  </article>`;
 }
 
 function renderDeals() {
@@ -443,40 +600,51 @@ function renderDeals() {
   $("#budget").value = state.budget;
   $("#budgetOut").textContent = state.budget >= 900 ? "Any" : money(state.budget);
   $("#sort").value = state.sort;
-  $("#dealList").innerHTML = list.length ? list.map(dealCard).join("")
-    : `<p class="empty">No deals match. Try raising your budget or adding a drive-to airport.</p>`;
+  const sortName = { drop: "biggest drop", price: "lowest fare", soon: "soonest departure" }[state.sort];
+  $("#resultCount").textContent = `${list.length} ${list.length === 1 ? "deal" : "deals"} · sorted by ${sortName}`;
+  $("#dealList").innerHTML = list.length ? list.map(dealCard).join("") : `
+    <div class="empty"><p>No fares match these filters. Raise your max price or add a drive-to airport.</p>
+    <a class="btn ghost" href="#airports">Add airports</a></div>`;
 }
 
 function renderWatches() {
   const cities = [...new Map(DEALS.map((d) => [d.to, d.city])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  $("#watchDest").innerHTML = cities.map(([code, city]) => `<option value="${code}">${esc(city)} (${code})</option>`).join("");
+  const cur = $("#watchDest").value;
+  $("#watchDest").innerHTML = cities.map(([c, n]) => `<option value="${c}">${esc(n)} (${c})</option>`).join("");
+  if (cur) $("#watchDest").value = cur;
   let hits = 0;
   $("#watchList").innerHTML = state.watches.length ? state.watches.map((w, i) => {
-    const best = bestFor(w.to);
-    const city = cities.find((c) => c[0] === w.to)?.[1] ?? w.to;
-    const hit = best && best.price <= w.target;
+    const best = bestFor(w.to), hit = best && best.price <= w.target;
     if (hit) hits++;
-    const status = !best ? `No fares from your airports yet`
-      : hit ? `<span class="hit">${money(best.price)} from ${best.from} — under your target</span>`
-      : `Now ${money(best.price)} · ${money(best.price - w.target)} to go`;
+    const fill = best ? Math.min(100, Math.round((w.target / best.price) * 100)) : 0;
+    const text = !best ? "No fares from your airports yet"
+      : hit ? `<b>${money(best.price)} from ${best.from}</b>, ${money(w.target - best.price)} under your target`
+      : `Now ${money(best.price)}. Needs to drop ${money(best.price - w.target)} more.`;
     return `<div class="watch">
-      <span class="code" style="font-size:22px;grid-row:auto">${w.to}</span>
-      <div style="min-width:0"><strong>${esc(city)}</strong> under ${money(w.target)}${w.example ? ` <span class="tag">example</span>` : ""}<div class="status">${status}</div></div>
-      <button class="icon-btn" type="button" data-remove="${i}" aria-label="Remove ${esc(city)} alert">Remove</button>
+      <span class="code">${w.to}</span>
+      <span class="watch-name">${esc(cityOf(w.to))}<small>Under ${money(w.target)}${w.example ? " · example" : ""}</small></span>
+      <button class="remove" type="button" data-remove="${i}" aria-label="Remove ${esc(cityOf(w.to))} alert">Remove</button>
+      <div class="meter">
+        <div class="meter-track" aria-hidden="true"><div class="meter-fill${hit ? " hit" : ""}" style="width:${fill}%"></div></div>
+        <div class="meter-text">${text}</div>
+      </div>
     </div>`;
-  }).join("") : `<p class="empty">No alerts yet. Add one below.</p>`;
-  const badge = $("#hitBadge");
-  badge.hidden = !hits;
-  badge.textContent = hits;
+  }).join("") : `<div class="empty"><p>No alerts yet. Tap the bell on any deal, or create one below.</p></div>`;
+  $("#hitBadge").hidden = !hits;
+  $("#hitBadge").textContent = hits;
 }
 
 function renderAirports() {
-  $("#airportList").innerHTML = AIRPORTS.map((a) => `
-    <label class="airport" for="ap-${a.code}">
-      <input type="checkbox" id="ap-${a.code}" data-ap="${a.code}" ${state.origins.includes(a.code) ? "checked" : ""} ${a.locked ? "disabled" : ""}>
-      <span><strong>${a.name}</strong><br><span class="drive">${a.locked ? "Home airport" : "Drive " + a.drive}</span></span>
-      <span class="code">${a.code}</span>
-    </label>`).join("");
+  $("#airportList").innerHTML = AIRPORTS.map((a) => {
+    const n = DEALS.filter((d) => d.from === a.code).length;
+    return `<label class="airport" for="ap-${a.code}">
+      <span class="airport-info">
+        <span class="code">${a.code}</span>
+        <span><strong>${a.name}</strong><span class="drive">${a.drive} · ${n} ${n === 1 ? "deal" : "deals"}</span></span>
+      </span>
+      <span class="switch"><input type="checkbox" role="switch" id="ap-${a.code}" data-ap="${a.code}" ${state.origins.includes(a.code) ? "checked" : ""} ${a.locked ? "disabled" : ""}><span></span></span>
+    </label>`;
+  }).join("");
   $("#email").value = state.email;
 }
 
@@ -486,65 +654,85 @@ function renderAll() { renderHeader(); renderChips(); renderDeals(); renderWatch
 function openDeal(id) {
   const d = DEALS.find((x) => x.id === id);
   if (!d) return;
-  const pct = dropPct(d), t = tier(pct);
-  const low60 = Math.min(...history(d).slice(0, 59));
-  const watching = state.watches.some((w) => w.to === d.to);
+  const p = dropPct(d), t = tier(p), on = watching(d.to);
+  const low = d.price < Math.min(...history(d).slice(0, 59));
   $("#sheetBody").innerHTML = `
     <div class="grab"></div>
     <div class="sheet-head">
       <div><div class="route">${d.from} ⇄ ${d.to} · ROUND TRIP</div><h3 id="sheetTitle">${esc(d.city)}</h3></div>
-      <button class="close" type="button" data-close aria-label="Close">×</button>
+      <button class="close" type="button" data-close aria-label="Close">${ICON.x}</button>
     </div>
     <div class="facts">
       <div class="fact"><span>Fare</span><b>${money(d.price)}</b></div>
-      <div class="fact"><span>Typical</span><b>${money(d.typical)}</b></div>
-      <div class="fact"><span>Savings</span><b style="color:var(--drop)">${money(d.typical - d.price)}</b></div>
+      <div class="fact"><span>Usually</span><b>${money(d.typical)}</b></div>
+      <div class="fact save"><span>You save</span><b>${money(d.typical - d.price)}</b></div>
     </div>
     <div class="chart">
-      <div class="chart-title"><span>Fare history, last 60 days</span><span class="pill ${t.cls}">${t.label} · −${pct}%</span></div>
-      ${sparkline(d)}
+      <div class="chart-title"><span>${low ? "Lowest fare in 60 days" : "Fare history, 60 days"}</span><span class="pill ${t.cls}">${t.label} · −${p}%</span></div>
+      ${chart(d)}
     </div>
-    <p class="fine">${fmtDate(d.out)} – ${fmtDate(d.back)} (${nights(d)} nights) · ${esc(d.airline)} · ${d.stops === 0 ? "Nonstop" : d.stops + " stop"}${d.price < low60 ? " · Lowest fare we've seen in 60 days" : ""}</p>
+    <div class="trip">
+      <div>Depart<b>${fmt(d.out, { weekday: "short", month: "short", day: "numeric" })}</b></div>
+      <div>Return<b>${fmt(d.back, { weekday: "short", month: "short", day: "numeric" })}</b></div>
+      <div>Airline<b>${esc(d.airline)} · ${d.stops ? "1 stop" : "Nonstop"}</b></div>
+      <div>Weather<b>${d.high}° avg high</b>${homeHigh(d)}° at home</div>
+    </div>
     <div class="sheet-actions">
-      <a class="btn signal" href="${flightsUrl(d)}" target="_blank" rel="noopener">Check on Google Flights</a>
-      <button class="btn ghost" type="button" data-watch="${d.to}" data-price="${d.price}">${watching ? "Alert is on" : "Alert me on drops"}</button>
+      <a class="btn signal" href="${flightsUrl(d)}" target="_blank" rel="noopener">Check fare ${ICON.ext}</a>
+      <button class="btn ghost" type="button" data-bell="${d.to}" data-price="${d.price}" aria-pressed="${on}">${ICON.bell}${on ? "Alert on" : "Set alert"}</button>
     </div>
-    <p class="fine">Fares change fast. The price shown here is a sample; confirm it on the booking site.</p>`;
+    <p class="fine">Sample fare for the prototype. Prices change fast, so confirm on Google Flights.</p>`;
   const dlg = $("#sheet");
   if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+}
+function closeSheet() { const s = $("#sheet"); s.close ? s.close() : s.removeAttribute("open"); }
+
+function toggleAlert(code, price) {
+  if (watching(code)) {
+    state.watches = state.watches.filter((w) => w.to !== code);
+    toast(`Alert removed for ${cityOf(code)}`);
+  } else {
+    const target = Math.floor((price * 0.9) / 5) * 5;
+    state.watches.unshift({ to: code, target });
+    toast(`Alert set: ${cityOf(code)} under ${money(target)}`);
+  }
+  store.set("watches2", state.watches);
+  renderWatches();
+  document.querySelectorAll(`[data-bell="${code}"]`).forEach((b) => {
+    const on = watching(code);
+    b.setAttribute("aria-pressed", on);
+    if (b.classList.contains("btn")) b.innerHTML = ICON.bell + (on ? "Alert on" : "Set alert");
+  });
 }
 
 /* ---------- Routing ---------- */
 const VIEWS = ["deals", "watchlist", "airports"];
 function route() {
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "deals";
-  VIEWS.forEach((name) => { $("#view-" + name).hidden = name !== v; });
-  document.querySelectorAll(".tabbar a").forEach((a) => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  VIEWS.forEach((n) => { $("#view-" + n).hidden = n !== v; });
+  document.querySelectorAll(".top").forEach((el) => { el.hidden = v !== "deals"; });
+  document.querySelectorAll(".tabbar a").forEach((a) => a.dataset.view === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  window.scrollTo(0, 0);
 }
 
 /* ---------- Events ---------- */
 document.addEventListener("click", (e) => {
+  const bell = e.target.closest("[data-bell]");
+  if (bell) { toggleAlert(bell.dataset.bell, Number(bell.dataset.price)); return; }
   const chip = e.target.closest("[data-type]");
   if (chip) { state.type = chip.dataset.type; store.set("type", state.type); renderChips(); renderDeals(); return; }
-  const deal = e.target.closest(".deal");
-  if (deal) { openDeal(Number(deal.dataset.id)); return; }
-  if (e.target.closest("[data-close]")) { $("#sheet").close?.(); $("#sheet").removeAttribute("open"); return; }
-  const watchBtn = e.target.closest("[data-watch]");
-  if (watchBtn) {
-    const to = watchBtn.dataset.watch;
-    if (!state.watches.some((w) => w.to === to)) {
-      state.watches.push({ to, target: Math.floor(Number(watchBtn.dataset.price) * 0.9 / 5) * 5 });
-      store.set("watches", state.watches); renderWatches();
-    }
-    watchBtn.textContent = "Alert is on";
-    return;
-  }
+  const open = e.target.closest("[data-open]");
+  if (open) { openDeal(Number(open.dataset.open)); return; }
+  if (e.target.closest("[data-close]")) { closeSheet(); return; }
   const rm = e.target.closest("[data-remove]");
-  if (rm) { state.watches.splice(Number(rm.dataset.remove), 1); store.set("watches", state.watches); renderWatches(); return; }
-  if (e.target.closest("#originBtn")) { location.hash = "airports"; }
+  if (rm) {
+    const [w] = state.watches.splice(Number(rm.dataset.remove), 1);
+    store.set("watches2", state.watches); renderWatches(); renderDeals();
+    toast(`Alert removed for ${cityOf(w.to)}`); return;
+  }
+  if (e.target.closest("#originBtn")) location.hash = "airports";
 });
-
-$("#sheet").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$("#sheet").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeSheet(); });
 
 $("#budget").addEventListener("input", (e) => { state.budget = Number(e.target.value); store.set("budget", state.budget); renderDeals(); });
 $("#sort").addEventListener("change", (e) => { state.sort = e.target.value; store.set("sort", state.sort); renderDeals(); });
@@ -552,30 +740,30 @@ $("#sort").addEventListener("change", (e) => { state.sort = e.target.value; stor
 $("#airportList").addEventListener("change", (e) => {
   const code = e.target.dataset.ap;
   if (!code) return;
-  state.origins = e.target.checked ? [...new Set([...state.origins, code])] : state.origins.filter((c) => c !== code);
-  state.origins = AIRPORTS.map((a) => a.code).filter((c) => state.origins.includes(c));
+  const set = new Set(state.origins);
+  e.target.checked ? set.add(code) : set.delete(code);
+  state.origins = AIRPORTS.map((a) => a.code).filter((c) => set.has(c));
   store.set("origins", state.origins);
   renderHeader(); renderDeals(); renderWatches();
+  toast(e.target.checked ? `Showing deals from ${code}` : `Hiding deals from ${code}`);
 });
 
 $("#addWatch").addEventListener("submit", (e) => {
   e.preventDefault();
   const to = $("#watchDest").value, target = Number($("#watchTarget").value);
   if (!target) return;
-  state.watches = state.watches.filter((w) => w.to !== to);
-  state.watches.unshift({ to, target });
-  store.set("watches", state.watches);
+  state.watches = [{ to, target }, ...state.watches.filter((w) => w.to !== to)];
+  store.set("watches2", state.watches);
   $("#watchTarget").value = "";
-  renderWatches();
+  renderWatches(); renderDeals();
+  toast(`Alert set: ${cityOf(to)} under ${money(target)}`);
 });
 
 $("#emailForm").addEventListener("submit", (e) => {
   e.preventDefault();
   state.email = $("#email").value.trim();
   store.set("email", state.email);
-  $("#emailToast").textContent = state.email
-    ? "Saved on this device. Email alerts switch on once the alert server is live."
-    : "Email cleared.";
+  toast(state.email ? "Saved. Emails start when alerts go live." : "Email removed");
 });
 
 window.addEventListener("hashchange", route);
